@@ -8,7 +8,7 @@ import type {
   UpdateNodeInput,
   ListNodesOptions,
   ListNodesResult,
-} from "./types.js";
+} from "./types";
 
 export async function createNode(
   db: Database,

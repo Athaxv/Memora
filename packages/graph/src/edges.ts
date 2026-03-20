@@ -1,7 +1,7 @@
 import { eq, and, sql } from "drizzle-orm";
 import { nodes, edges } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
-import type { Edge } from "./types.js";
+import type { Edge } from "./types";
 
 const SIMILARITY_THRESHOLD = 0.75;
 const MAX_EDGES_PER_NODE = 10;

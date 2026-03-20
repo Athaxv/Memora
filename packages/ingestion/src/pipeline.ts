@@ -7,9 +7,9 @@ import {
   upsertTags,
   addTagsToNode,
 } from "@repo/graph";
-import { extractText } from "./extractors/text.js";
-import { extractUrl } from "./extractors/url.js";
-import type { PipelineContext, IngestInput, IngestResult } from "./types.js";
+import { extractText } from "./extractors/text";
+import { extractUrl } from "./extractors/url";
+import type { PipelineContext, IngestInput, IngestResult } from "./types";
 
 export async function ingest(
   ctx: PipelineContext,
@@ -21,18 +21,18 @@ export async function ingest(
       ? await extractUrl(input.content)
       : extractText(input.content, input.title);
 
-  // 2. Summarize via Claude
-  const summaryText = await summarize(extracted.content, ctx.anthropicApiKey);
+  // 2. Summarize via Groq
+  const summaryText = await summarize(extracted.content, ctx.groqApiKey);
 
-  // 3. Generate embedding via OpenAI
+  // 3. Generate embedding via OpenAI (optional — skipped if no key)
   const textForEmbedding = `${extracted.title}\n\n${extracted.content}`.slice(
     0,
     8000
   );
   const embedding = await generateEmbedding(textForEmbedding, ctx.openaiApiKey);
 
-  // 4. Auto-tag via Claude
-  const aiTags = await autoTag(extracted.content, ctx.anthropicApiKey);
+  // 4. Auto-tag via Groq
+  const aiTags = await autoTag(extracted.content, ctx.groqApiKey);
   const aiTagNames = aiTags.map((t) => t.name);
 
   // 5. Merge user tags + AI tags
@@ -49,7 +49,7 @@ export async function ingest(
     summary: summaryText,
     source: input.type === "url" ? "web" : "manual",
     sourceUrl: extracted.sourceUrl,
-    embedding,
+    embedding: embedding ?? undefined,
   });
 
   // 7. Upsert tags and link to node
@@ -69,13 +69,16 @@ export async function ingest(
     );
   }
 
-  // 8. Compute semantic edges
-  const edgeCount = await computeSemanticEdges(
-    ctx.db,
-    node.id,
-    input.userId,
-    embedding
-  );
+  // 8. Compute semantic edges (only if embedding available)
+  let edgeCount = 0;
+  if (embedding) {
+    edgeCount = await computeSemanticEdges(
+      ctx.db,
+      node.id,
+      input.userId,
+      embedding
+    );
+  }
 
   return {
     nodeId: node.id,

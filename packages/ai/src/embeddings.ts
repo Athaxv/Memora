@@ -14,8 +14,9 @@ function getClient(apiKey: string): OpenAI {
 
 export async function generateEmbedding(
   text: string,
-  apiKey: string
-): Promise<number[]> {
+  apiKey: string | undefined
+): Promise<number[] | null> {
+  if (!apiKey) return null;
   const openai = getClient(apiKey);
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
@@ -26,8 +27,9 @@ export async function generateEmbedding(
 
 export async function generateEmbeddings(
   texts: string[],
-  apiKey: string
-): Promise<number[][]> {
+  apiKey: string | undefined
+): Promise<number[][] | null> {
+  if (!apiKey) return null;
   const openai = getClient(apiKey);
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",

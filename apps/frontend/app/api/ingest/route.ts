@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     const result = await ingest(
       {
         db,
-        openaiApiKey: process.env.OPENAI_API_KEY!,
-        anthropicApiKey: process.env.ANTHROPIC_API_KEY!,
+        groqApiKey: process.env.GROQ_API_KEY!,
+        openaiApiKey: process.env.OPENAI_API_KEY || undefined,
       },
       {
         userId: session.user.id,

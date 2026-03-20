@@ -1,13 +1,16 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { z } from "zod";
-import type { TagResult } from "./types.js";
+import type { TagResult } from "./types";
 
-let cachedClient: Anthropic | null = null;
+let cachedClient: OpenAI | null = null;
 let cachedApiKey: string | null = null;
 
-function getClient(apiKey: string): Anthropic {
+function getClient(apiKey: string): OpenAI {
   if (cachedClient && cachedApiKey === apiKey) return cachedClient;
-  cachedClient = new Anthropic({ apiKey });
+  cachedClient = new OpenAI({
+    apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
   cachedApiKey = apiKey;
   return cachedClient;
 }
@@ -25,8 +28,8 @@ export async function autoTag(
 ): Promise<TagResult[]> {
   const client = getClient(apiKey);
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const response = await client.chat.completions.create({
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     max_tokens: 300,
     messages: [
       {
@@ -41,11 +44,11 @@ ${content.slice(0, 5000)}`,
     ],
   });
 
-  const block = response.content[0];
-  if (!block || block.type !== "text") return [];
+  const text = response.choices[0]?.message?.content;
+  if (!text) return [];
 
   try {
-    const parsed = JSON.parse(block.text);
+    const parsed = JSON.parse(text);
     return tagSchema.parse(parsed);
   } catch {
     return [];

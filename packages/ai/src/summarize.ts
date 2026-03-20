@@ -1,11 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-let cachedClient: Anthropic | null = null;
+let cachedClient: OpenAI | null = null;
 let cachedApiKey: string | null = null;
 
-function getClient(apiKey: string): Anthropic {
+function getClient(apiKey: string): OpenAI {
   if (cachedClient && cachedApiKey === apiKey) return cachedClient;
-  cachedClient = new Anthropic({ apiKey });
+  cachedClient = new OpenAI({
+    apiKey,
+    baseURL: "https://api.groq.com/openai/v1",
+  });
   cachedApiKey = apiKey;
   return cachedClient;
 }
@@ -16,8 +19,8 @@ export async function summarize(
 ): Promise<string> {
   const client = getClient(apiKey);
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+  const response = await client.chat.completions.create({
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     max_tokens: 300,
     messages: [
       {
@@ -30,9 +33,5 @@ ${content.slice(0, 10000)}`,
     ],
   });
 
-  const block = response.content[0];
-  if (block && block.type === "text") {
-    return block.text;
-  }
-  return "";
+  return response.choices[0]?.message?.content ?? "";
 }

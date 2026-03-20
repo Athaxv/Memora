@@ -9,8 +9,8 @@ import {
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { users } from "./users.js";
-import { nodes } from "./nodes.js";
+import { users } from "./users";
+import { nodes } from "./nodes";
 
 export const edgeTypeEnum = pgEnum("edge_type", [
   "semantic",

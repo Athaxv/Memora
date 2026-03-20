@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { tags, nodeTags } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
-import type { Tag } from "./types.js";
+import type { Tag } from "./types";
 
 export async function upsertTags(
   db: Database,

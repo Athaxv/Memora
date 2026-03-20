@@ -17,8 +17,15 @@ export async function POST(req: NextRequest) {
 
     const queryEmbedding = await generateEmbedding(
       query,
-      process.env.OPENAI_API_KEY!
+      process.env.OPENAI_API_KEY || undefined
     );
+
+    if (!queryEmbedding) {
+      return NextResponse.json(
+        { error: "Semantic search requires OPENAI_API_KEY for embeddings" },
+        { status: 501 }
+      );
+    }
 
     const results = await semanticSearch(db, session.user.id, queryEmbedding, {
       limit,

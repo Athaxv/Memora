@@ -2,8 +2,8 @@ import type { Database } from "@repo/db/client";
 
 export interface PipelineContext {
   db: Database;
-  openaiApiKey: string;
-  anthropicApiKey: string;
+  groqApiKey: string;
+  openaiApiKey?: string;
 }
 
 export interface IngestInput {

@@ -9,7 +9,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { customType } from "drizzle-orm/pg-core";
-import { users } from "./users.js";
+import { users } from "./users";
 
 const vector = customType<{ data: number[]; driverParam: string }>({
   dataType() {

@@ -5,7 +5,7 @@ import { chatSchema } from "@/lib/validators";
 import { classifyIntent } from "@repo/ai/intent";
 import { generateEmbedding } from "@repo/ai/embeddings";
 import { semanticSearch } from "@repo/graph";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -17,20 +17,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { message } = chatSchema.parse(body);
 
-    const anthropicApiKey = process.env.ANTHROPIC_API_KEY!;
-    const openaiApiKey = process.env.OPENAI_API_KEY!;
+    const groqApiKey = process.env.GROQ_API_KEY!;
+    const openaiApiKey = process.env.OPENAI_API_KEY || undefined;
 
     // 1. Classify intent
-    const intent = await classifyIntent(message, anthropicApiKey);
+    const intent = await classifyIntent(message, groqApiKey);
 
-    // 2. Search for relevant memories
+    // 2. Search for relevant memories (only if embeddings available)
+    let searchResults: Awaited<ReturnType<typeof semanticSearch>> = [];
     const queryEmbedding = await generateEmbedding(message, openaiApiKey);
-    const searchResults = await semanticSearch(
-      db,
-      session.user.id,
-      queryEmbedding,
-      { limit: 5 }
-    );
+    if (queryEmbedding) {
+      searchResults = await semanticSearch(
+        db,
+        session.user.id,
+        queryEmbedding,
+        { limit: 5 }
+      );
+    }
 
     // 3. Build context from memories
     const memoryContext = searchResults
@@ -40,13 +43,19 @@ export async function POST(req: NextRequest) {
       )
       .join("\n\n");
 
-    // 4. Generate response with Claude
-    const client = new Anthropic({ apiKey: anthropicApiKey });
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    // 4. Generate response with Groq
+    const client = new OpenAI({
+      apiKey: groqApiKey,
+      baseURL: "https://api.groq.com/openai/v1",
+    });
+    const response = await client.chat.completions.create({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       max_tokens: 1000,
-      system: `You are Memory OS, an AI assistant that helps users recall and explore their saved memories. You have access to the user's memory graph. Answer based on the provided memories. If no relevant memories are found, say so honestly. Always cite which memories you're referencing.`,
       messages: [
+        {
+          role: "system",
+          content: `You are Memory OS, an AI assistant that helps users recall and explore their saved memories. You have access to the user's memory graph. Answer based on the provided memories. If no relevant memories are found, say so honestly. Always cite which memories you're referencing.`,
+        },
         {
           role: "user",
           content: `User's intent: ${intent.intent}
@@ -59,8 +68,7 @@ User's message: ${message}`,
       ],
     });
 
-    const block = response.content[0];
-    const assistantMessage = block && block.type === "text" ? block.text : "";
+    const assistantMessage = response.choices[0]?.message?.content ?? "";
 
     return NextResponse.json({
       message: assistantMessage,

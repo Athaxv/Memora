@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { nodes, edges } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
-import type { Node } from "./types.js";
+import type { Node } from "./types";
 
 export async function getRelatedNodes(
   db: Database,

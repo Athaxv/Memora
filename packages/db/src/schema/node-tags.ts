@@ -1,6 +1,6 @@
 import { pgTable, uuid, varchar, primaryKey } from "drizzle-orm/pg-core";
-import { nodes } from "./nodes.js";
-import { tags } from "./tags.js";
+import { nodes } from "./nodes";
+import { tags } from "./tags";
 
 export const nodeTags = pgTable(
   "node_tags",

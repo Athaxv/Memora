@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import type { Database } from "@repo/db/client";
-import type { SearchResult, Node } from "./types.js";
+import type { SearchResult, Node } from "./types";
 
 export async function semanticSearch(
   db: Database,

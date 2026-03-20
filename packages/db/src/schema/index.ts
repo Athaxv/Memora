@@ -1,8 +1,8 @@
-export { users } from "./users.js";
-export { accounts, sessions, verificationTokens } from "./auth.js";
-export { nodes, nodeTypeEnum } from "./nodes.js";
-export { edges, edgeTypeEnum } from "./edges.js";
-export { tags } from "./tags.js";
-export { nodeTags } from "./node-tags.js";
-export { conversations } from "./conversations.js";
-export { messages, messageRoleEnum } from "./messages.js";
+export { users } from "./users";
+export { accounts, sessions, verificationTokens } from "./auth";
+export { nodes, nodeTypeEnum } from "./nodes";
+export { edges, edgeTypeEnum } from "./edges";
+export { tags } from "./tags";
+export { nodeTags } from "./node-tags";
+export { conversations } from "./conversations";
+export { messages, messageRoleEnum } from "./messages";

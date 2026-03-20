@@ -1,4 +1,4 @@
-import type { ExtractedContent } from "../types.js";
+import type { ExtractedContent } from "../types";
 
 export function extractText(
   content: string,

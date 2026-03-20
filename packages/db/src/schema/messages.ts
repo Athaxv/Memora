@@ -6,7 +6,7 @@ import {
   jsonb,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { conversations } from "./conversations.js";
+import { conversations } from "./conversations";
 
 export const messageRoleEnum = pgEnum("message_role", [
   "user",

@@ -4,17 +4,17 @@ export {
   listNodes,
   updateNode,
   softDeleteNode,
-} from "./nodes.js";
+} from "./nodes";
 
 export {
   computeSemanticEdges,
   createEdge,
   getEdgesForNode,
-} from "./edges.js";
+} from "./edges";
 
-export { getRelatedNodes } from "./traversal.js";
+export { getRelatedNodes } from "./traversal";
 
-export { semanticSearch } from "./search.js";
+export { semanticSearch } from "./search";
 
 export {
   upsertTags,
@@ -22,7 +22,7 @@ export {
   getTagsForUser,
   getTagsForNode,
   removeTagFromNode,
-} from "./tags.js";
+} from "./tags";
 
 export type {
   Node,
@@ -35,4 +35,4 @@ export type {
   SearchResult,
   CreateNodeInput,
   UpdateNodeInput,
-} from "./types.js";
+} from "./types";
