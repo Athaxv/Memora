@@ -5,6 +5,7 @@ import { Header } from "@/app/components/dashboard/header";
 import { Sidebar } from "@/app/components/dashboard/sidebar";
 import { QuickCapture } from "@/app/components/dashboard/quick-capture";
 import { MemoryFeed } from "@/app/components/dashboard/memory-feed";
+import { TimelineView } from "@/app/components/dashboard/timeline-view";
 
 interface MemoryNode {
   id: string;
@@ -21,6 +22,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState("");
   const [searchMode, setSearchMode] = useState(false);
+  const [view, setView] = useState<"feed" | "timeline">("feed");
 
   const fetchMemories = useCallback(
     async (cursor?: string) => {
@@ -75,7 +77,6 @@ export default function DashboardPage() {
     });
 
     if (res.ok) {
-      // Refresh the feed
       fetchMemories();
     }
   }
@@ -102,30 +103,70 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-y-auto">
           <QuickCapture onCapture={handleCapture} />
 
-          {searchMode && (
-            <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
-              <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                Search results ({memories.length})
-              </span>
-              <button
-                onClick={() => {
-                  setSearchMode(false);
-                  fetchMemories();
-                }}
-                className="text-sm font-medium text-zinc-700 hover:underline dark:text-zinc-300"
-              >
-                Clear search
-              </button>
-            </div>
-          )}
+          {/* View toggle + search bar */}
+          <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+            {searchMode ? (
+              <>
+                <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Search results ({memories.length})
+                </span>
+                <button
+                  onClick={() => {
+                    setSearchMode(false);
+                    fetchMemories();
+                  }}
+                  className="text-sm font-medium text-zinc-700 hover:underline dark:text-zinc-300"
+                >
+                  Clear search
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setView("feed")}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      view === "feed"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                        : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    Feed
+                  </button>
+                  <button
+                    onClick={() => setView("timeline")}
+                    className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                      view === "timeline"
+                        ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                        : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                    }`}
+                  >
+                    Timeline
+                  </button>
+                </div>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                  {memories.length} memories
+                </span>
+              </>
+            )}
+          </div>
 
           <div className="p-4">
-            <MemoryFeed
-              memories={memories}
-              nextCursor={nextCursor}
-              onLoadMore={handleLoadMore}
-              loading={loading}
-            />
+            {view === "feed" ? (
+              <MemoryFeed
+                memories={memories}
+                nextCursor={nextCursor}
+                onLoadMore={handleLoadMore}
+                loading={loading}
+              />
+            ) : (
+              <TimelineView
+                memories={memories}
+                nextCursor={nextCursor}
+                onLoadMore={handleLoadMore}
+                loading={loading}
+              />
+            )}
           </div>
         </main>
       </div>
