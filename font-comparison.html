@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Font Comparison</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #fdfdfd; color: #111; font-family: Inter, sans-serif; padding: 40px; }
+    .section { margin-bottom: 60px; padding: 40px; border: 1px solid #e4e4e7; border-radius: 8px; }
+    .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 20px; font-weight: 600; }
+    .heading-italic { font-style: italic; font-weight: 400; font-size: clamp(2.5rem, 5vw, 5.35rem); line-height: 0.95; color: #111118; letter-spacing: -0.01em; }
+    .heading-bold { font-weight: 500; font-size: clamp(2.5rem, 5vw, 5.35rem); line-height: 0.95; color: #111118; letter-spacing: -0.04em; font-family: Inter, sans-serif; }
+    .current { background: #f0fdf4; border-color: #86efac; }
+    .vs { text-align: center; font-size: 14px; color: #999; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <h1 style="font-family: Inter; font-size: 18px; margin-bottom: 10px;">Font Comparison for Hero Heading</h1>
+  <p style="color: #666; margin-bottom: 40px; font-size: 14px;">Compare how each serif italic font looks with the hero heading text</p>
+
+  <!-- Option 1: Instrument Serif (current) -->
+  <div class="section current">
+    <div class="label">Option 1 — Instrument Serif (Currently Active)</div>
+    <div class="heading-italic" style="font-family: 'Instrument Serif', serif;">
+      The AI Analytics Platform
+    </div>
+    <div class="heading-bold" style="margin-top: 4px;">
+      for your whole team
+    </div>
+  </div>
+
+  <!-- Option 2: Newsreader -->
+  <div class="section">
+    <div class="label">Option 2 — Newsreader</div>
+    <div class="heading-italic" style="font-family: 'Newsreader', serif;">
+      The AI Analytics Platform
+    </div>
+    <div class="heading-bold" style="margin-top: 4px;">
+      for your whole team
+    </div>
+  </div>
+
+  <!-- Option 3: Playfair Display -->
+  <div class="section">
+    <div class="label">Option 3 — Playfair Display</div>
+    <div class="heading-italic" style="font-family: 'Playfair Display', serif;">
+      The AI Analytics Platform
+    </div>
+    <div class="heading-bold" style="margin-top: 4px;">
+      for your whole team
+    </div>
+  </div>
+
+  <p style="color: #888; font-size: 13px; margin-top: 20px;">
+    Green border = currently active in your app. All paired with Inter (sans-serif) for the second line.
+  </p>
+</body>
+</html>

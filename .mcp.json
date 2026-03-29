@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "figma": {
+      "command": "C:\\Users\\Atharv\\AppData\\Roaming\\npm\\figma-developer-mcp.cmd",
+      "args": [
+        "--stdio",
+        "--figma-api-key=figd_dUM25ULFXAwXSylqNWvN45nH1Wt7P3e9yL22qT9c"
+      ]
+    }
+  }
+}
