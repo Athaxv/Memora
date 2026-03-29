@@ -9,27 +9,54 @@ import {
 } from "@repo/graph";
 import { extractText } from "./extractors/text";
 import { extractUrl } from "./extractors/url";
+import { extractFile } from "./extractors/file";
 import type { PipelineContext, IngestInput, IngestResult } from "./types";
+
+function resolveNodeType(input: IngestInput): "link" | "note" | "document" | "media" {
+  if (input.type === "url") return "link";
+  if (input.type === "file") {
+    const mime = input.mimeType ?? "";
+    if (mime.startsWith("image/")) return "media";
+    if (mime === "application/pdf") return "document";
+    return "note";
+  }
+  return "note";
+}
+
+function resolveSource(input: IngestInput): string {
+  if (input.type === "url") return "web";
+  if (input.type === "file") return "upload";
+  return "manual";
+}
 
 export async function ingest(
   ctx: PipelineContext,
   input: IngestInput
 ): Promise<IngestResult> {
   // 1. Extract content
-  const extracted =
-    input.type === "url"
-      ? await extractUrl(input.content)
-      : extractText(input.content, input.title);
+  let extracted;
+  if (input.type === "url") {
+    extracted = await extractUrl(input.content);
+  } else if (input.type === "file") {
+    extracted = await extractFile(
+      input.fileBuffer!,
+      input.mimeType!,
+      input.fileName!,
+      ctx.groqApiKey
+    );
+  } else {
+    extracted = extractText(input.content, input.title);
+  }
 
   // 2. Summarize via Groq
   const summaryText = await summarize(extracted.content, ctx.groqApiKey);
 
-  // 3. Generate embedding via OpenAI (optional — skipped if no key)
+  // 3. Generate embedding via Nomic/HuggingFace (optional — skipped if no key)
   const textForEmbedding = `${extracted.title}\n\n${extracted.content}`.slice(
     0,
     8000
   );
-  const embedding = await generateEmbedding(textForEmbedding, ctx.openaiApiKey);
+  const embedding = await generateEmbedding(textForEmbedding, ctx.hfApiKey, "document");
 
   // 4. Auto-tag via Groq
   const aiTags = await autoTag(extracted.content, ctx.groqApiKey);
@@ -43,11 +70,11 @@ export async function ingest(
   // 6. Store node
   const node = await createNode(ctx.db, {
     userId: input.userId,
-    type: input.type === "url" ? "link" : "note",
+    type: resolveNodeType(input),
     title: extracted.title,
     content: extracted.content,
     summary: summaryText,
-    source: input.type === "url" ? "web" : "manual",
+    source: resolveSource(input),
     sourceUrl: extracted.sourceUrl,
     embedding: embedding ?? undefined,
   });
