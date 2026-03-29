@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -8,17 +7,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
+const instrumentSerif = Instrument_Serif({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400",
   style: ["normal", "italic"],
 });
 
-const dmSans = DM_Sans({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -33,9 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
-        className={`${playfair.variable} ${dmSans.variable} ${geistMono.variable} antialiased`}
+        className={`${instrumentSerif.variable} ${inter.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>
