@@ -1,39 +1,72 @@
-import OpenAI from "openai";
-
 const MAX_INPUT_LENGTH = 8000;
 
-let cachedClient: OpenAI | null = null;
-let cachedApiKey: string | null = null;
+const HF_MODEL_URL =
+  "https://api-inference.huggingface.co/pipeline/feature-extraction/nomic-ai/nomic-embed-text-v1.5";
 
-function getClient(apiKey: string): OpenAI {
-  if (cachedClient && cachedApiKey === apiKey) return cachedClient;
-  cachedClient = new OpenAI({ apiKey });
-  cachedApiKey = apiKey;
-  return cachedClient;
-}
-
+/**
+ * Generate a single embedding using nomic-embed-text-v1.5 via Hugging Face Inference API.
+ * @param purpose - "document" for storage, "query" for search/retrieval
+ */
 export async function generateEmbedding(
   text: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  purpose: "document" | "query" = "document"
 ): Promise<number[] | null> {
   if (!apiKey) return null;
-  const openai = getClient(apiKey);
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text.slice(0, MAX_INPUT_LENGTH),
+
+  const prefix = purpose === "query" ? "search_query: " : "search_document: ";
+  const input = prefix + text.slice(0, MAX_INPUT_LENGTH);
+
+  const response = await fetch(HF_MODEL_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ inputs: input }),
   });
-  return response.data[0]!.embedding;
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `HuggingFace embedding failed (${response.status}): ${errorText}`
+    );
+  }
+
+  const embedding: number[] = await response.json();
+  return embedding;
 }
 
+/**
+ * Generate embeddings for multiple texts in a single batch request.
+ * @param purpose - "document" for storage, "query" for search/retrieval
+ */
 export async function generateEmbeddings(
   texts: string[],
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  purpose: "document" | "query" = "document"
 ): Promise<number[][] | null> {
   if (!apiKey) return null;
-  const openai = getClient(apiKey);
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: texts.map((t) => t.slice(0, MAX_INPUT_LENGTH)),
+
+  const prefix = purpose === "query" ? "search_query: " : "search_document: ";
+  const inputs = texts.map((t) => prefix + t.slice(0, MAX_INPUT_LENGTH));
+
+  const response = await fetch(HF_MODEL_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ inputs }),
   });
-  return response.data.map((d) => d.embedding);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `HuggingFace embedding failed (${response.status}): ${errorText}`
+    );
+  }
+
+  const embeddings: number[][] = await response.json();
+  return embeddings;
 }

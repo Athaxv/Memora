@@ -8,6 +8,13 @@
       "when": 1773987138582,
       "tag": "0000_demonic_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774177506060,
+      "tag": "0001_condemned_skreet",
+      "breakpoints": true
     }
   ]
 }

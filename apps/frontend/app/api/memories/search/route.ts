@@ -17,12 +17,13 @@ export async function POST(req: NextRequest) {
 
     const queryEmbedding = await generateEmbedding(
       query,
-      process.env.OPENAI_API_KEY || undefined
+      process.env.HF_API_KEY || undefined,
+      "query"
     );
 
     if (!queryEmbedding) {
       return NextResponse.json(
-        { error: "Semantic search requires OPENAI_API_KEY for embeddings" },
+        { error: "Semantic search requires HF_API_KEY for embeddings" },
         { status: 501 }
       );
     }

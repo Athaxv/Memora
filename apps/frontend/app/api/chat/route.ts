@@ -18,14 +18,14 @@ export async function POST(req: NextRequest) {
     const { message } = chatSchema.parse(body);
 
     const groqApiKey = process.env.GROQ_API_KEY!;
-    const openaiApiKey = process.env.OPENAI_API_KEY || undefined;
+    const hfApiKey = process.env.HF_API_KEY || undefined;
 
     // 1. Classify intent
     const intent = await classifyIntent(message, groqApiKey);
 
     // 2. Search for relevant memories (only if embeddings available)
     let searchResults: Awaited<ReturnType<typeof semanticSearch>> = [];
-    const queryEmbedding = await generateEmbedding(message, openaiApiKey);
+    const queryEmbedding = await generateEmbedding(message, hfApiKey, "query");
     if (queryEmbedding) {
       searchResults = await semanticSearch(
         db,

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       {
         db,
         groqApiKey: process.env.GROQ_API_KEY!,
-        openaiApiKey: process.env.OPENAI_API_KEY || undefined,
+        hfApiKey: process.env.HF_API_KEY || undefined,
       },
       {
         userId: session.user.id,

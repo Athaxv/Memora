@@ -13,7 +13,7 @@ import { users } from "./users";
 
 const vector = customType<{ data: number[]; driverParam: string }>({
   dataType() {
-    return "vector(1536)";
+    return "vector(768)";
   },
   toDriver(value: number[]) {
     return JSON.stringify(value);
