@@ -35,7 +35,7 @@ export function HeroSection() {
               <path d="M12 2v5M12 17v5M2 12h5M17 12h5M4.93 4.93l3.5 3.5M15.5 15.5l3.5 3.5M4.93 19.07l3.5-3.5M15.5 8.5l3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="mt-1 block text-[clamp(2.5rem,5vw,5.15rem)] leading-[0.95] font-sans font-medium tracking-[-0.04em] subpixel-antialiased text-[#111118]">
+          <span className="mt-1 block text-[clamp(2.5rem,5vw,5.15rem)] leading-[0.95] font-sans font-bold tracking-[-0.045em] subpixel-antialiased text-[#111118]">
             Second Brain
           </span>
         </h1>

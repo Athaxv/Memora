@@ -1,28 +1,27 @@
 const testimonials = [
   {
-    company: "MERCOR",
-    companyIcon: "M",
+    company: "RESEARCHER",
+    companyIcon: "🔬",
     quote: (
       <>
-        &ldquo;If we didn&rsquo;t have Hex, we might&rsquo;ve left more than $100M
-        on the table. <strong>That might even be an underestimate.</strong>&rdquo;
+        &ldquo;I saved over 200 papers last semester and Memory OS automatically mapped the connections between them.{" "}
+        <strong>My literature review practically wrote itself.</strong>&rdquo;
       </>
     ),
-    name: "David F.",
-    title: "Co-Founder & CEO",
+    name: "Arjun K.",
+    title: "PhD Candidate, MIT",
   },
   {
-    company: "nigidia",
-    companyIcon: "◎",
+    company: "FOUNDER",
+    companyIcon: "🚀",
     quote: (
       <>
-        &ldquo;You can do almost everything for you in Hex.
-        I use it to scaffold entire apps and help me
-        debug SQL queries. <strong>It makes me 10x faster.</strong>&rdquo;
+        &ldquo;I forward every interesting thread from WhatsApp and Twitter straight into my graph.{" "}
+        <strong>It&rsquo;s like having a second brain with perfect recall.</strong>&rdquo;
       </>
     ),
-    name: "Lori T.",
-    title: "Principal Engineer",
+    name: "Priya S.",
+    title: "CEO, Stealth Startup",
   },
 ];
 
@@ -34,8 +33,8 @@ export function TestimonialsStrip() {
           <div key={t.name} className="flex flex-col items-center px-8 py-10 text-center md:px-16 md:py-12 lg:px-24">
             {/* Company logo/name */}
             <div className="mb-5 flex items-center gap-1.5 text-[15px] font-bold tracking-tight text-zinc-800">
-              <span className="text-base font-black">{t.companyIcon}</span>
-              <span className="uppercase tracking-wider">{t.company}</span>
+              <span className="text-base">{t.companyIcon}</span>
+              <span className="uppercase tracking-wider text-[13px]">{t.company}</span>
             </div>
 
             {/* Quote */}
@@ -46,7 +45,7 @@ export function TestimonialsStrip() {
             {/* Author */}
             <div className="mt-5 text-[13px] text-zinc-500">
               <span className="font-medium text-zinc-800">{t.name}</span>
-              <span className="mx-1.5 text-zinc-300">·</span>
+              <span className="mx-1.5 text-zinc-300">&middot;</span>
               <span>{t.title}</span>
             </div>
           </div>
