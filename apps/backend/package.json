@@ -1,0 +1,33 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.0",
+    "@fastify/jwt": "^9.0.0",
+    "@fastify/multipart": "^9.0.0",
+    "@repo/ai": "*",
+    "@repo/db": "*",
+    "@repo/graph": "*",
+    "@repo/ingestion": "*",
+    "@repo/validators": "*",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.0",
+    "drizzle-orm": "^0.39.3",
+    "fastify": "^5.0.0",
+    "openai": "^4.80.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/bcryptjs": "^2.4.6",
+    "tsx": "^4.0.0",
+    "typescript": "5.9.2"
+  }
+}
