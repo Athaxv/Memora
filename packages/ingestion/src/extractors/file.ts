@@ -25,9 +25,8 @@ async function extractPdf(
   buffer: Buffer,
   fileName: string
 ): Promise<ExtractedContent> {
-  // pdf-parse v1 uses default export as a function
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pdfParse = require("pdf-parse");
+  const pdfParseModule = await import("pdf-parse");
+  const pdfParse = pdfParseModule.default ?? pdfParseModule;
   const data = await pdfParse(buffer);
 
   const title =
