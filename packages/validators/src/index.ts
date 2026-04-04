@@ -30,6 +30,11 @@ export const searchSchema = z.object({
   type: z.string().optional(),
 });
 
+export const updateProfileSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  onboardingCompleted: z.boolean().optional(),
+});
+
 export const chatSchema = z.object({
   conversationId: z.string().uuid().optional(),
   message: z.string().min(1).max(5000),
