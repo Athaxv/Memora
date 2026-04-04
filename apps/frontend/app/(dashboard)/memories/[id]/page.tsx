@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { api } from "@/lib/api";
 
 interface MemoryDetail {
   id: string;
@@ -36,7 +37,7 @@ export default function MemoryDetailPage() {
 
   useEffect(() => {
     async function load() {
-      const res = await fetch(`/api/memories/${params.id}`);
+      const res = await api(`/memories/${params.id}`);
       if (res.ok) {
         setMemory(await res.json());
       }
@@ -47,8 +48,8 @@ export default function MemoryDetailPage() {
 
   async function handleDelete() {
     if (!confirm("Delete this memory?")) return;
-    const res = await fetch(`/api/memories/${params.id}`, { method: "DELETE" });
-    if (res.ok) router.push("/");
+    const res = await api(`/memories/${params.id}`, { method: "DELETE" });
+    if (res.ok) router.push("/vault");
   }
 
   if (loading) {
@@ -73,7 +74,7 @@ export default function MemoryDetailPage() {
     <div className="mx-auto max-w-4xl px-6 py-8">
       <div className="mb-6 flex items-center gap-3">
         <Link
-          href="/"
+          href="/vault"
           className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
         >
           &larr; Back

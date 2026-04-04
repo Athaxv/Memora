@@ -5,7 +5,7 @@ import {
   updateNodeSchema,
   searchSchema,
   chatSchema,
-} from "../lib/validators";
+} from "@repo/validators";
 
 describe("ingestSchema", () => {
   it("accepts valid text input", () => {

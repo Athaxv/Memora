@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { api } from "@/lib/api";
+import { setToken } from "@/lib/token";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -17,9 +20,8 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/signup", {
+      const res = await api("/auth/signup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
 
@@ -30,13 +32,9 @@ export default function SignUpPage() {
         return;
       }
 
-      await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      window.location.href = "/";
+      const data = await res.json();
+      setToken(data.token);
+      window.location.href = "/onboarding";
     } catch {
       setError("Something went wrong");
       setLoading(false);
@@ -51,7 +49,7 @@ export default function SignUpPage() {
       <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
       <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
 
-      <h1 className="text-[1.75rem] italic font-serif leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Create account
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">
@@ -59,7 +57,7 @@ export default function SignUpPage() {
       </p>
 
       <button
-        onClick={() => signIn("google", { callbackUrl: "/" })}
+        onClick={() => { window.location.href = `${API_URL}/auth/google`; }}
         className="mb-5 flex w-full items-center justify-center gap-2.5 border border-zinc-200 bg-[#fdfdfd] px-4 py-3 text-[14px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">

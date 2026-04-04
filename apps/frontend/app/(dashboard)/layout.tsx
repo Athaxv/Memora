@@ -1,16 +1,55 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+"use client";
 
-export default async function DashboardLayout({
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getToken } from "@/lib/token";
+import { api } from "@/lib/api";
+
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
 
-  if (!session?.user) {
-    redirect("/login");
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
+
+    api("/auth/me").then((res) => {
+      if (!res.ok) {
+        router.replace("/login");
+        return;
+      }
+      res.json().then((user: { onboardingCompleted: boolean }) => {
+        if (!user.onboardingCompleted) {
+          router.replace("/onboarding");
+        } else {
+          setReady(true);
+        }
+      });
+    });
+  }, [router]);
+
+  if (!ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fdfdfd]">
+        <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
+      </div>
+    );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"
+      />
+      <div style={{ fontFamily: "'Satoshi', sans-serif" }}>{children}</div>
+    </>
+  );
 }

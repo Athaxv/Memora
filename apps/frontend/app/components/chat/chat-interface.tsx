@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { api } from "@/lib/api";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -33,9 +34,8 @@ export function ChatInterface() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await api("/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage }),
       });
 
