@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { api } from "@/lib/api";
-import { VaultHeader } from "@/app/components/vault/vault-header";
 import { VaultSearchBar } from "@/app/components/vault/vault-search-bar";
 import { RecentItems } from "@/app/components/vault/recent-items";
 import { EmptyState } from "@/app/components/vault/empty-state";
@@ -84,9 +83,7 @@ export default function VaultPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#fdfdfd]">
-      <VaultHeader />
-
+    <div className="flex h-full flex-col bg-[#fdfdfd]">
       <main className="flex-1 px-6">
         <VaultSearchBar onSave={handleSave} onSearch={handleSearch} />
 

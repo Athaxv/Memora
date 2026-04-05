@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/token";
 import { api } from "@/lib/api";
+import { Sidebar } from "@/app/components/dashboard/sidebar";
 
 export default function DashboardLayout({
   children,
@@ -49,7 +50,10 @@ export default function DashboardLayout({
         rel="stylesheet"
         href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"
       />
-      <div style={{ fontFamily: "'Satoshi', sans-serif" }}>{children}</div>
+      <div className="flex h-screen" style={{ fontFamily: "'Satoshi', sans-serif" }}>
+        <Sidebar />
+        <main className="flex-1 min-w-0 overflow-auto">{children}</main>
+      </div>
     </>
   );
 }
