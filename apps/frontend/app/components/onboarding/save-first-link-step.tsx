@@ -47,10 +47,10 @@ export function SaveFirstLinkStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div className="relative border border-zinc-200/80 bg-white p-10 md:p-12">
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
       <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Save your first link
@@ -77,7 +77,7 @@ export function SaveFirstLinkStep({ onNext }: { onNext: () => void }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
-              className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
+              className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
               placeholder="https://example.com/interesting-article"
             />
           </div>
@@ -106,7 +106,7 @@ export function SaveFirstLinkStep({ onNext }: { onNext: () => void }) {
             <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
             <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
 
-            <p className="text-[12px] font-bold uppercase tracking-widest text-emerald-600 mb-2">Saved</p>
+            <p className="text-[12px] font-bold uppercase tracking-widest text-[#d97706] mb-2">Saved</p>
             <p className="text-[15px] font-bold text-[#111118] mb-2">{result.title || "Untitled"}</p>
             {result.summary && (
               <p className="text-[13px] text-zinc-500 font-medium mb-3 leading-relaxed">{result.summary}</p>
@@ -137,7 +137,7 @@ export function SaveFirstLinkStep({ onNext }: { onNext: () => void }) {
       )}
 
       <p className="mt-5 text-center text-[13px] font-medium text-zinc-400">
-        <button onClick={onNext} className="underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-500 hover:text-zinc-600 transition-colors">
+        <button onClick={onNext} className="underline underline-offset-4 decoration-[#fbbf9b]/50 hover:decoration-[#d97706] hover:text-[#d97706] transition-colors">
           Skip for now
         </button>
       </p>

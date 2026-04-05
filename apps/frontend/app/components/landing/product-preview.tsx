@@ -11,9 +11,12 @@ export function ProductPreview() {
 
         {/* Left text content */}
         <div className="relative z-10 flex w-full max-w-[340px] flex-col justify-start pt-2 xl:max-w-[380px]">
-          <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-gradient-to-b from-rose-50/50 to-rose-100/50 shadow-sm ring-1 ring-inset ring-rose-200/50 mb-7">
-            {/* Brain/knowledge icon */}
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="relative mb-7 inline-flex h-[52px] w-[52px] items-center justify-center border border-[#fbbf9b]/40 bg-[#fef2e4]/50">
+            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
           </div>
@@ -24,8 +27,16 @@ export function ProductPreview() {
             Every link, note, and message you save is instantly summarized, auto-tagged, and woven into your personal knowledge graph — building connections you'd never find manually.
           </p>
           <div className="mt-8">
-            <a href="#features" className="inline-flex items-center justify-center rounded-[4px] border border-zinc-200 bg-white px-5 py-2.5 text-[14.5px] font-medium text-zinc-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:bg-zinc-50">
-              See how it works
+            <a
+              href="#features"
+              className="group relative inline-flex items-center justify-center bg-transparent px-5 py-2.5 text-[14px] font-bold text-zinc-900 transition-colors"
+            >
+              <span className="absolute inset-0 border border-zinc-200 bg-white transition-colors group-hover:bg-[#fef2e4]/60" />
+              <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+              <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+              <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+              <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+              <span className="relative z-10 tracking-tight">See how it works</span>
             </a>
           </div>
 

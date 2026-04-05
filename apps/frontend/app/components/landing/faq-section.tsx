@@ -45,9 +45,15 @@ export function FaqSection() {
         <div className="absolute left-0 right-0 top-0 h-px border-t border-dashed border-zinc-200/80 pointer-events-none hidden lg:block z-0" />
 
         <div className="w-full max-w-3xl relative z-10">
-          <h2 className="text-center text-[2rem] md:text-[2.5rem] font-bold text-zinc-900 tracking-tight mb-12">
-            FAQ
-          </h2>
+          <div className="text-center mb-12">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d97706] mb-3">
+              Got questions?
+            </p>
+            <h2 className="text-[2rem] md:text-[3rem] font-bold text-zinc-900 tracking-tight">
+              <span className="italic font-serif text-[#111118]">Frequently </span>
+              <span className="font-sans">asked</span>
+            </h2>
+          </div>
 
           <div className="flex flex-col border-t border-zinc-200">
             {faqs.map((faq, index) => (
@@ -81,7 +87,7 @@ export function FaqSection() {
           </div>
 
           <div className="mt-12 text-center text-[13px] font-medium text-zinc-600">
-             Can&rsquo;t find your answer here? <Link href="/contact" className="text-zinc-900 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors">Get in touch</Link>.
+             Can&rsquo;t find your answer here? <Link href="/contact" className="text-[#d97706] underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors">Get in touch</Link>.
           </div>
         </div>
       </div>

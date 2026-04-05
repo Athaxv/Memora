@@ -53,10 +53,10 @@ const socialFields = [
 function CornerAccents() {
   return (
     <>
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
     </>
   );
 }
@@ -151,17 +151,21 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#fdfdfd]">
-        <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
+      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+        <div className="flex gap-1.5">
+          <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
+          <div className="h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
+          <div className="h-1.5 w-1.5 border border-[#fbbf9b]/50 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fdfdfd]">
+    <div className="flex h-full flex-col bg-[#fef8f0]">
       <main className="flex-1 px-6 py-8 overflow-auto">
         <div className="mx-auto max-w-[640px] space-y-6">
-          <h1 className="text-[13px] font-bold uppercase tracking-[0.15em] text-zinc-400 mb-6">
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-6">
             Profile
           </h1>
 
@@ -191,17 +195,17 @@ export default function ProfilePage() {
                         if (e.key === "Enter") saveName();
                         if (e.key === "Escape") setEditingName(false);
                       }}
-                      className="flex-1 border border-zinc-200 bg-[#fdfdfd] px-3 py-1.5 text-[1.25rem] font-bold text-[#111118] outline-none focus:border-zinc-400"
+                      className="flex-1 border border-zinc-200 bg-[#fef8f0] px-3 py-1.5 text-[1.25rem] font-bold text-[#111118] outline-none focus:border-[#fbbf9b]"
                     />
                     <button
                       onClick={saveName}
-                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      className="p-1.5 text-[#d97706] hover:bg-[#fef2e4] transition-colors"
                     >
                       <Check size={16} strokeWidth={2} />
                     </button>
                     <button
                       onClick={() => setEditingName(false)}
-                      className="p-1.5 text-zinc-400 hover:bg-zinc-50 transition-colors"
+                      className="p-1.5 text-zinc-400 hover:bg-[#fef8f0] transition-colors"
                     >
                       <X size={16} strokeWidth={2} />
                     </button>
@@ -234,20 +238,20 @@ export default function ProfilePage() {
             <CornerAccents />
 
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-400">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706]">
                 Social Links
               </h3>
               {editingSocial ? (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={saveSocialLinks}
-                    className="px-3 py-1 text-[12px] font-bold text-emerald-600 hover:bg-emerald-50 transition-colors"
+                    className="px-3 py-1 text-[12px] font-bold text-[#d97706] hover:bg-[#fef2e4] transition-colors"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditingSocial(false)}
-                    className="px-3 py-1 text-[12px] font-bold text-zinc-400 hover:bg-zinc-50 transition-colors"
+                    className="px-3 py-1 text-[12px] font-bold text-zinc-400 hover:bg-[#fef8f0] transition-colors"
                   >
                     Cancel
                   </button>
@@ -279,7 +283,7 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setSocialDraft((prev) => ({ ...prev, [key]: e.target.value }))
                       }
-                      className="flex-1 border border-zinc-200 bg-[#fdfdfd] px-3 py-1.5 text-[13px] text-zinc-900 placeholder-zinc-400 outline-none focus:border-zinc-400"
+                      className="flex-1 border border-zinc-200 bg-[#fef8f0] px-3 py-1.5 text-[13px] text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#fbbf9b]"
                       placeholder={`https://...`}
                     />
                   ) : user.socialLinks?.[key] ? (
@@ -287,7 +291,7 @@ export default function ProfilePage() {
                       href={user.socialLinks[key]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 truncate text-[13px] font-medium text-zinc-700 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-500 transition-colors"
+                      className="flex-1 truncate text-[13px] font-medium text-zinc-700 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
                     >
                       {user.socialLinks[key]}
                     </a>
@@ -303,7 +307,7 @@ export default function ProfilePage() {
           <div className="relative border border-zinc-200/80 bg-white p-8">
             <CornerAccents />
 
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-400 mb-5">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-5">
               Resume
             </h3>
 
@@ -321,7 +325,7 @@ export default function ProfilePage() {
                   <FileText size={18} strokeWidth={1.5} className="shrink-0 text-zinc-500" />
                   <Link
                     href={`/memories/${user.resumeNode.id}`}
-                    className="truncate text-[14px] font-medium text-zinc-700 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-500 transition-colors"
+                    className="truncate text-[14px] font-medium text-zinc-700 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
                   >
                     {user.resumeNode.title || "Resume"}
                   </Link>
@@ -338,7 +342,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex w-full items-center justify-center gap-2 border border-dashed border-zinc-300 bg-[#fdfdfd] px-4 py-6 text-zinc-500 hover:border-zinc-400 hover:text-zinc-700 transition-colors disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 border border-dashed border-[#fbbf9b]/60 bg-[#fef8f0] px-4 py-6 text-[#d97706] hover:border-[#d97706] hover:text-[#b45309] transition-colors disabled:opacity-50"
               >
                 <Upload size={16} strokeWidth={1.5} />
                 <span className="text-[13px] font-medium">
@@ -353,7 +357,7 @@ export default function ProfilePage() {
             <div className="relative border border-zinc-200/80 bg-white p-8">
               <CornerAccents />
 
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-400 mb-5">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-5">
                 Account
               </h3>
 

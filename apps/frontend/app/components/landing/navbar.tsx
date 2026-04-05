@@ -11,7 +11,7 @@ function ChevronDown() {
       height="10"
       viewBox="0 0 10 10"
       fill="none"
-      className="ml-1 opacity-40 transition-transform group-hover:rotate-180"
+      className="ml-1 opacity-60 transition-transform group-hover:rotate-180"
     >
       <path
         d="M2.5 3.75L5 6.25L7.5 3.75"
@@ -30,13 +30,12 @@ export function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 40);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu on resize to desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) setMobileOpen(false);
@@ -46,161 +45,229 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex flex-col items-center w-full shadow-none pointer-events-none">
-      {/* Full-Width Ticker Bar */}
-      <div
-        className={cn(
-          "w-full bg-zinc-950 overflow-hidden flex relative transition-all duration-500 ease-in-out origin-top pointer-events-auto",
-          scrolled ? "max-h-0 opacity-0 py-0" : "max-h-[38px] opacity-100 py-2"
-        )}
-      >
-        {/* Left fade mask */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-zinc-950 to-transparent z-10 pointer-events-none" />
-        {/* Right fade mask */}
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-zinc-950 to-transparent z-10 pointer-events-none" />
-
-        <div className="flex animate-marquee whitespace-nowrap w-max">
-          {[0, 1].map((set) => (
-            <div key={set} className="flex items-center shrink-0 gap-6 px-4 text-[12px] font-medium text-zinc-400 tracking-wide">
-              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-emerald-400 shrink-0" />Your second brain, powered by AI</span>
-              <span className="text-zinc-700">—</span>
-              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-rose-400 shrink-0" />Capture from anywhere — WhatsApp, Chrome, email, PDFs</span>
-              <span className="text-zinc-700">—</span>
-              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-sky-400 shrink-0" />Find anything with natural language search</span>
-              <span className="text-zinc-700">—</span>
-              <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />Zero-effort organization — AI tags, links &amp; summarizes</span>
-              <span className="text-zinc-700 mr-6">—</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
+    <header className="fixed top-0 z-50 flex flex-col items-center w-full pointer-events-none">
       <nav
         className={cn(
-          "w-full flex justify-center transition-all duration-300 pointer-events-auto backdrop-blur-sm",
+          "w-full flex justify-center transition-all duration-500 pointer-events-auto",
           scrolled
-            ? "border-b border-zinc-200 bg-[#fdfdfd]/90 shadow-sm"
-            : "border-b border-zinc-200/80 bg-transparent"
+            ? "border-b border-[#fbbf9b]/25 bg-[#fef8f0]/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(217,119,6,0.06)]"
+            : "border-b border-white/10 bg-transparent backdrop-blur-[2px]"
         )}
       >
-      <div
-        className={cn(
-          "flex w-full max-w-[1200px] items-center justify-between px-6 md:px-10 lg:px-12 transition-all duration-300",
-          scrolled ? "py-3" : "py-5"
-        )}
-      >
-        {/* Left nav links */}
-        <div className="hidden flex-1 items-center gap-7 text-[15px] font-medium text-zinc-600 md:flex">
-          <Link
-            href="#features"
-            className="group flex items-center transition-colors hover:text-zinc-950"
-          >
-            Features
-            <ChevronDown />
-          </Link>
-          <Link
-            href="#use-cases"
-            className="group flex items-center transition-colors hover:text-zinc-950"
-          >
-            Use Cases
-            <ChevronDown />
-          </Link>
-          <Link
-            href="#pricing"
-            className="transition-colors hover:text-zinc-950"
-          >
-            Pricing
-          </Link>
-        </div>
-
-        {/* Center logo */}
-        <Link href="/" className="flex flex-shrink-0 items-center gap-2">
-          <div className="flex items-center gap-1.5 font-bold tracking-tighter text-zinc-900 text-xl">
-            {/* Brain/memory icon */}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-900">
-              <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
-              <path d="M9 21h6" />
-              <path d="M10 17v4" />
-              <path d="M14 17v4" />
-              <path d="M12 2v5" />
-              <path d="M8 6l2 2" />
-              <path d="M16 6l-2 2" />
-            </svg>
-            <span className="tracking-tight">Memory OS</span>
-          </div>
-        </Link>
-
-        {/* Right nav links + CTA */}
-        <div className="flex flex-1 items-center justify-end gap-7 text-[15px] font-medium text-zinc-600">
-          <Link
-            href="#resources"
-            className="group hidden items-center transition-colors hover:text-zinc-950 lg:flex"
-          >
-            Resources
-            <ChevronDown />
-          </Link>
-          <Link
-            href="/login"
-            className="hidden transition-colors hover:text-zinc-950 md:block"
-          >
-            Log In
-          </Link>
-          <Link
-            href="/signup"
-            className="group relative hidden md:inline-flex items-center justify-center bg-transparent px-5 py-2 text-[15px] font-medium text-zinc-900 transition-colors"
-          >
-            {/* Cut/decorative border effect */}
-            <span className="absolute inset-0 border border-zinc-200/80 bg-[#fdfdfd]/80 backdrop-blur-sm transition-colors group-hover:bg-zinc-100/60"></span>
-
-            {/* Corner squares (editing handle effect) */}
-            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors" />
-            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors" />
-            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors" />
-            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors" />
-
-            <span className="relative z-10">Get started</span>
-          </Link>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="flex md:hidden items-center justify-center w-9 h-9 text-zinc-700"
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6L6 18" />
-                <path d="M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 12h18" />
-                <path d="M3 6h18" />
-                <path d="M3 18h18" />
-              </svg>
+        <div
+          className={cn(
+            "flex w-full max-w-[1200px] items-center justify-between px-6 md:px-10 lg:px-12 transition-all duration-300",
+            scrolled ? "py-3" : "py-5"
+          )}
+        >
+          {/* Left nav links */}
+          <div
+            className={cn(
+              "hidden flex-1 items-center gap-7 text-[15px] font-medium transition-colors md:flex",
+              scrolled ? "text-zinc-600" : "text-[#fff5e6]/85"
             )}
-          </button>
-        </div>
-      </div>
+          >
+            <Link
+              href="#features"
+              className={cn(
+                "group flex items-center transition-colors",
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+              )}
+            >
+              Features
+              <ChevronDown />
+            </Link>
+            <Link
+              href="#use-cases"
+              className={cn(
+                "group flex items-center transition-colors",
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+              )}
+            >
+              Use Cases
+              <ChevronDown />
+            </Link>
+            <Link
+              href="#pricing"
+              className={cn(
+                "transition-colors",
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+              )}
+            >
+              Pricing
+            </Link>
+          </div>
 
-      {/* Mobile dropdown menu */}
-      <div
-        className={cn(
-          "w-full max-w-[1200px] overflow-hidden transition-all duration-300 ease-in-out md:hidden",
-          mobileOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
-        )}
-      >
-        <div className="flex flex-col gap-1 px-6 pb-6 pt-2 bg-[#fdfdfd]/95 backdrop-blur-sm border-t border-zinc-100">
-          <Link href="#features" onClick={() => setMobileOpen(false)} className="py-3 text-[15px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Features</Link>
-          <Link href="#use-cases" onClick={() => setMobileOpen(false)} className="py-3 text-[15px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Use Cases</Link>
-          <Link href="#pricing" onClick={() => setMobileOpen(false)} className="py-3 text-[15px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Pricing</Link>
-          <Link href="#resources" onClick={() => setMobileOpen(false)} className="py-3 text-[15px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Resources</Link>
-          <div className="h-px bg-zinc-200/80 my-2" />
-          <Link href="/login" onClick={() => setMobileOpen(false)} className="py-3 text-[15px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">Log In</Link>
-          <Link href="/signup" onClick={() => setMobileOpen(false)} className="mt-2 inline-flex items-center justify-center border border-zinc-300 bg-[#fdfdfd] px-5 py-2.5 text-[15px] font-medium text-zinc-900 hover:bg-zinc-100 transition-colors">Get started</Link>
+          {/* Center logo */}
+          <Link href="/" className="flex flex-shrink-0 items-center gap-2">
+            <div
+              className={cn(
+                "flex items-center gap-1.5 font-bold tracking-tighter text-xl transition-colors",
+                scrolled ? "text-zinc-900" : "text-[#fef2e4] drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+              )}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
+                <path d="M9 21h6" />
+                <path d="M10 17v4" />
+                <path d="M14 17v4" />
+                <path d="M12 2v5" />
+                <path d="M8 6l2 2" />
+                <path d="M16 6l-2 2" />
+              </svg>
+              <span className="tracking-tight">Memory OS</span>
+            </div>
+          </Link>
+
+          {/* Right nav links + CTA */}
+          <div
+            className={cn(
+              "flex flex-1 items-center justify-end gap-7 text-[15px] font-medium transition-colors",
+              scrolled ? "text-zinc-600" : "text-[#fff5e6]/85"
+            )}
+          >
+            <Link
+              href="#resources"
+              className={cn(
+                "group hidden items-center transition-colors lg:flex",
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+              )}
+            >
+              Resources
+              <ChevronDown />
+            </Link>
+            <Link
+              href="/login"
+              className={cn(
+                "hidden transition-colors md:block",
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+              )}
+            >
+              Log In
+            </Link>
+            <Link
+              href="/signup"
+              className="group relative hidden md:inline-flex items-center justify-center bg-transparent px-5 py-2 text-[15px] font-bold transition-colors"
+            >
+              <span
+                className={cn(
+                  "absolute inset-0 backdrop-blur-sm transition-colors",
+                  scrolled
+                    ? "border border-zinc-900 bg-zinc-900 group-hover:bg-zinc-800"
+                    : "border border-[#fef2e4]/80 bg-[#fef2e4]/15 group-hover:bg-[#fef2e4]/25"
+                )}
+              />
+
+              {/* Corner squares */}
+              <span
+                className={cn(
+                  "absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border transition-colors",
+                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border transition-colors",
+                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border transition-colors",
+                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border transition-colors",
+                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                )}
+              />
+
+              <span className={cn("relative z-10 tracking-tight", scrolled ? "text-[#fef2e4]" : "text-[#fef2e4]")}>
+                Get started
+              </span>
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={cn(
+                "flex md:hidden items-center justify-center w-9 h-9 transition-colors",
+                scrolled ? "text-zinc-700" : "text-[#fef2e4]"
+              )}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12h18" />
+                  <path d="M3 6h18" />
+                  <path d="M3 18h18" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-    </nav>
+
+        {/* Mobile dropdown menu */}
+        <div
+          className={cn(
+            "absolute top-full left-0 right-0 w-full overflow-hidden transition-all duration-300 ease-in-out md:hidden",
+            mobileOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+          )}
+        >
+          <div
+            className={cn(
+              "flex flex-col gap-1 px-6 pb-6 pt-2 backdrop-blur-md border-t",
+              scrolled
+                ? "bg-[#fdfdfd]/95 border-zinc-100"
+                : "bg-zinc-950/70 border-white/10"
+            )}
+          >
+            {["Features", "Use Cases", "Pricing", "Resources"].map((label) => (
+              <Link
+                key={label}
+                href={`#${label.toLowerCase().replace(" ", "-")}`}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "py-3 text-[15px] font-medium transition-colors",
+                  scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fff5e6]/85 hover:text-[#fef2e4]"
+                )}
+              >
+                {label}
+              </Link>
+            ))}
+            <div className={cn("h-px my-2", scrolled ? "bg-zinc-200/80" : "bg-white/15")} />
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "py-3 text-[15px] font-medium transition-colors",
+                scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fff5e6]/85 hover:text-[#fef2e4]"
+              )}
+            >
+              Log In
+            </Link>
+            <Link
+              href="/signup"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "mt-2 inline-flex items-center justify-center border px-5 py-2.5 text-[15px] font-bold transition-colors",
+                scrolled
+                  ? "border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800"
+                  : "border-[#fef2e4] bg-[#fef2e4]/15 text-[#fef2e4] hover:bg-[#fef2e4]/25"
+              )}
+            >
+              Get started
+            </Link>
+          </div>
+        </div>
+      </nav>
     </header>
   );
 }

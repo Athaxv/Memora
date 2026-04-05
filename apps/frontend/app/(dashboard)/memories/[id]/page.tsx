@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 
 interface MemoryDetail {
@@ -27,6 +28,17 @@ interface MemoryDetail {
     edgeType: string;
     weight: number;
   }[];
+}
+
+function CornerAccents() {
+  return (
+    <>
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+    </>
+  );
 }
 
 export default function MemoryDetailPage() {
@@ -54,16 +66,16 @@ export default function MemoryDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <span className="text-sm text-zinc-400">Loading...</span>
+      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+        <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
       </div>
     );
   }
 
   if (!memory) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <span className="text-sm text-zinc-400">Memory not found</span>
+      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+        <span className="text-[13px] font-medium text-zinc-400">Memory not found</span>
       </div>
     );
   }
@@ -71,139 +83,153 @@ export default function MemoryDetailPage() {
   const date = new Date(memory.createdAt);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-8">
-      <div className="mb-6 flex items-center gap-3">
-        <Link
-          href="/vault"
-          className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-        >
-          &larr; Back
-        </Link>
-        <button
-          onClick={handleDelete}
-          className="ml-auto rounded-lg px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-        >
-          Delete
-        </button>
-      </div>
-
-      <div className="mb-4 flex items-center gap-2">
-        <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-          {memory.type}
-        </span>
-        {memory.source && (
-          <span className="text-xs text-zinc-400">via {memory.source}</span>
-        )}
-        <span className="ml-auto text-xs text-zinc-400">
-          {date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      </div>
-
-      <h1 className="mb-4 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        {memory.title || "Untitled"}
-      </h1>
-
-      {memory.sourceUrl && (
-        <a
-          href={memory.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mb-4 block text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
-          {memory.sourceUrl}
-        </a>
-      )}
-
-      {memory.summary && (
-        <div className="mb-6 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-900">
-          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            AI Summary
-          </h3>
-          <p className="text-sm text-zinc-700 dark:text-zinc-300">
-            {memory.summary}
-          </p>
-        </div>
-      )}
-
-      {memory.content && (
-        <div className="mb-8">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Content
-          </h3>
-          <div className="prose prose-sm max-w-none text-zinc-700 dark:prose-invert dark:text-zinc-300">
-            <pre className="whitespace-pre-wrap text-sm">
-              {memory.content.slice(0, 5000)}
-            </pre>
+    <div className="flex h-full flex-col bg-[#fef8f0]">
+      <main className="flex-1 px-6 py-8 overflow-auto">
+        <div className="mx-auto max-w-[720px] space-y-6">
+          {/* Top bar */}
+          <div className="flex items-center justify-between">
+            <Link
+              href="/vault"
+              className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-zinc-400 hover:text-[#d97706] transition-colors"
+            >
+              <ArrowLeft size={14} strokeWidth={1.5} />
+              Back to vault
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-widest text-zinc-400 hover:text-red-600 transition-colors"
+            >
+              <Trash2 size={14} strokeWidth={1.5} />
+              Delete
+            </button>
           </div>
-        </div>
-      )}
 
-      {memory.tags.length > 0 && (
-        <div className="mb-8">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Tags
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {memory.tags.map((tag) => (
-              <span
-                key={tag.id}
-                className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  tag.isAi
-                    ? "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
-                    : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                }`}
-              >
-                {tag.name}
-                {tag.isAi && (
-                  <span className="ml-1 text-violet-400 dark:text-violet-500">
-                    AI
-                  </span>
-                )}
+          {/* Header card */}
+          <div className="relative border border-zinc-200/80 bg-white p-8">
+            <CornerAccents />
+
+            <div className="flex items-center gap-2 mb-4">
+              <span className="border border-[#fbbf9b]/50 bg-[#fef2e4] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-[#d97706]">
+                {memory.type}
               </span>
-            ))}
-          </div>
-        </div>
-      )}
+              {memory.source && (
+                <span className="text-[11px] font-medium text-zinc-400">
+                  via {memory.source}
+                </span>
+              )}
+              <span className="ml-auto text-[11px] font-medium text-zinc-400">
+                {date.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
 
-      {memory.related.length > 0 && (
-        <div>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Connected Memories
-          </h3>
-          <div className="space-y-2">
-            {memory.related.map((r) => (
-              <Link
-                key={r.node.id}
-                href={`/memories/${r.node.id}`}
-                className="flex items-center gap-3 rounded-lg border border-zinc-200 p-3 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+            <h1 className="text-[1.75rem] font-bold text-[#111118] tracking-tight leading-[1.15]">
+              {memory.title || "Untitled"}
+            </h1>
+
+            {memory.sourceUrl && (
+              <a
+                href={memory.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block truncate text-[13px] font-medium text-[#d97706] underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
               >
-                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-                  {r.node.type}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {r.node.title || "Untitled"}
-                  </p>
-                  {r.node.summary && (
-                    <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                      {r.node.summary}
-                    </p>
-                  )}
-                </div>
-                <span className="shrink-0 text-xs text-zinc-400">
-                  {r.edgeType} ({(r.weight * 100).toFixed(0)}%)
-                </span>
-              </Link>
-            ))}
+                {memory.sourceUrl}
+              </a>
+            )}
           </div>
+
+          {/* AI Summary */}
+          {memory.summary && (
+            <div className="relative border border-zinc-200/80 bg-white p-8">
+              <CornerAccents />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-3">
+                AI Summary
+              </h3>
+              <p className="text-[14px] text-zinc-700 leading-relaxed font-medium">
+                {memory.summary}
+              </p>
+            </div>
+          )}
+
+          {/* Content */}
+          {memory.content && (
+            <div className="relative border border-zinc-200/80 bg-white p-8">
+              <CornerAccents />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-3">
+                Content
+              </h3>
+              <pre className="whitespace-pre-wrap text-[13px] text-zinc-600 leading-relaxed font-sans">
+                {memory.content.slice(0, 5000)}
+              </pre>
+            </div>
+          )}
+
+          {/* Tags */}
+          {memory.tags.length > 0 && (
+            <div className="relative border border-zinc-200/80 bg-white p-8">
+              <CornerAccents />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-4">
+                Tags
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {memory.tags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`border px-2.5 py-1 text-[11px] font-bold ${
+                      tag.isAi
+                        ? "border-[#fbbf9b]/60 bg-[#fef2e4] text-[#d97706]"
+                        : "border-zinc-200 bg-[#fef8f0] text-zinc-600"
+                    }`}
+                  >
+                    {tag.name}
+                    {tag.isAi && <span className="ml-1 opacity-60">AI</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Connected Memories */}
+          {memory.related.length > 0 && (
+            <div className="relative border border-zinc-200/80 bg-white p-8">
+              <CornerAccents />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-4">
+                Connected memories
+              </h3>
+              <div className="divide-y divide-dashed divide-[#fbbf9b]/25">
+                {memory.related.map((r) => (
+                  <Link
+                    key={r.node.id}
+                    href={`/memories/${r.node.id}`}
+                    className="group flex items-center gap-4 py-3 px-1 transition-all hover:bg-[#fef2e4]/50 hover:px-2"
+                  >
+                    <span className="shrink-0 border border-[#fbbf9b]/50 bg-[#fef2e4] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#d97706]">
+                      {r.node.type}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-[14px] font-bold text-zinc-900 group-hover:text-[#111118]">
+                        {r.node.title || "Untitled"}
+                      </p>
+                      {r.node.summary && (
+                        <p className="truncate text-[12px] text-zinc-500 mt-0.5">
+                          {r.node.summary}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-[#d97706]">
+                      {(r.weight * 100).toFixed(0)}%
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </main>
     </div>
   );
 }

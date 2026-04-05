@@ -44,13 +44,13 @@ export function Footer() {
           {/* Links Columns */}
           {footerColumns.map((col, idx) => (
             <div key={idx} className="flex flex-col">
-              <h3 className="text-[11px] font-bold tracking-widest text-zinc-900 uppercase mb-5">
+              <h3 className="text-[11px] font-bold tracking-widest text-[#d97706] uppercase mb-5">
                 {col.title}
               </h3>
               <ul className="flex flex-col gap-3">
                 {col.links.map((linkName, jdx) => (
                   <li key={jdx}>
-                    <Link href="#" className="text-[13px] font-bold text-zinc-600 hover:text-zinc-900 transition-colors">
+                    <Link href="#" className="text-[13px] font-medium text-zinc-600 hover:text-zinc-900 transition-colors">
                       {linkName}
                     </Link>
                   </li>
@@ -61,8 +61,12 @@ export function Footer() {
 
           {/* Status Column (Right) */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-start lg:items-end mt-4 lg:mt-0">
-             <div className="flex items-center gap-2 px-3 py-1.5 border border-zinc-200 rounded text-[10px] font-mono tracking-wider font-bold text-zinc-600 cursor-pointer hover:bg-zinc-50 transition-colors">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+             <div className="relative flex items-center gap-2 px-3 py-1.5 border border-[#fbbf9b]/50 text-[10px] font-mono tracking-wider font-bold text-zinc-600 cursor-pointer hover:bg-[#fef2e4]/40 transition-colors">
+                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#d97706] animate-pulse" />
                 ALL SYSTEMS GO
              </div>
           </div>

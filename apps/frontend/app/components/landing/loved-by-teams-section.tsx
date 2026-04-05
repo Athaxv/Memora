@@ -3,32 +3,32 @@ import type { ReactNode } from "react";
 
 const roleIcons: Record<string, ReactNode> = {
   RESEARCHER: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
     </svg>
   ),
   WRITER: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
     </svg>
   ),
   FOUNDER: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
     </svg>
   ),
   STUDENT: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-sky-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
   INVESTOR: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   ),
   DEVELOPER: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
     </svg>
   ),
@@ -110,7 +110,7 @@ export function LovedByTeamsSection() {
              {testimonials.map((c, i) => (
                <div key={i} className="flex-1 p-6 lg:p-8 flex flex-col items-start min-h-[220px]">
                   <div className="h-8 flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center">
+                    <div className="w-8 h-8 border border-[#fbbf9b]/50 bg-[#fef2e4]/40 flex items-center justify-center">
                       {roleIcons[c.company] ?? <span className="text-xs font-bold text-zinc-400">{c.company[0]}</span>}
                     </div>
                     <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">{c.company}</span>
@@ -135,7 +135,7 @@ export function LovedByTeamsSection() {
                 <div className="text-[13px] font-medium text-zinc-500">Memories captured daily</div>
                 <div className="w-16 h-px bg-zinc-200" />
                 <div className="text-[3.5rem] font-bold tracking-tighter text-zinc-900 leading-none">4.9</div>
-                <div className="flex items-center gap-0.5 text-amber-400">
+                <div className="flex items-center gap-0.5 text-[#d97706]">
                   {[...Array(5)].map((_, i) => (
                     <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   ))}
@@ -145,15 +145,19 @@ export function LovedByTeamsSection() {
 
               <h3 className="font-bold text-xl text-zinc-900 mb-2 tracking-tight">People love Memory OS</h3>
               <p className="text-[12px] text-zinc-600 font-medium">
-                Join thousands building their second brain. <Link href="/signup" className="text-zinc-900 underline underline-offset-2 hover:text-rose-500 transition-colors whitespace-nowrap">Get started free &rarr;</Link>
+                Join thousands building their second brain. <Link href="/signup" className="text-zinc-900 underline underline-offset-2 decoration-[#fbbf9b] hover:text-[#d97706] transition-colors whitespace-nowrap">Get started free &rarr;</Link>
               </p>
            </div>
 
            {/* Large Testimonial Card */}
            <div className="w-full md:w-2/3 border border-zinc-200/80 rounded-lg shadow-sm bg-white p-8 lg:p-12 flex flex-col justify-between hover:shadow-md transition-shadow">
               <div>
-                <div className="w-8 h-8 bg-zinc-900 rounded mb-8 flex items-center justify-center text-white text-[15px] font-sans font-bold shadow-sm">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="relative mb-8 inline-flex h-9 w-9 items-center justify-center border border-[#fbbf9b]/60 bg-[#fef2e4]/60">
+                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
                     <path d="M9 21h6" />
                   </svg>
@@ -168,7 +172,7 @@ export function LovedByTeamsSection() {
 
               <div className="mt-8 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-zinc-200 shadow-inner overflow-hidden border border-zinc-100 flex items-center justify-center">
-                   <div className="w-full h-full bg-gradient-to-tr from-indigo-400 to-violet-300 relative"><div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-800 rounded-t-full"/></div>
+                   <div className="w-full h-full bg-gradient-to-tr from-[#d97706] to-[#fbbf9b] relative"><div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#7c2d12] rounded-t-full"/></div>
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
                   <span className="text-[12px] font-bold text-zinc-500 tracking-[0.2em]">LOVED BY THINKERS</span>

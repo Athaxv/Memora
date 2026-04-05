@@ -74,7 +74,7 @@ export function IntegrationsSection() {
         {/* 3x2 Grid */}
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
           {integrations.map((item, index) => (
-            <div key={index} className="bg-zinc-50/80 group flex flex-col items-start text-left p-6 relative border border-zinc-100 hover:border-zinc-200 transition-colors">
+            <div key={index} className="bg-[#fef8f0]/60 group flex flex-col items-start text-left p-6 relative border border-[#fbbf9b]/20 hover:border-[#fbbf9b]/50 hover:bg-[#fef2e4]/50 transition-colors">
               <div className="w-full flex justify-center mb-6">
                 <div className="relative h-40 w-full overflow-hidden flex items-center justify-center">
                   <Player component={item.component} {...playerConfig} />
@@ -85,7 +85,7 @@ export function IntegrationsSection() {
                 {item.description}
               </p>
               <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                    <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>
               </div>
@@ -95,44 +95,69 @@ export function IntegrationsSection() {
       </div>
     </section>
 
-    {/* CTA Footer Section */}
-    <section className="relative w-full border-b border-zinc-200/80 flex justify-center z-10 bg-transparent">
-      <div className="flex w-full max-w-[1200px] flex-col md:flex-row items-center px-6 py-16 md:px-10 lg:px-12 md:py-24 relative border-t border-dashed border-zinc-200/80 mt-16">
+    {/* Dark Sunset CTA Section */}
+    <section className="relative w-full flex justify-center z-10 overflow-hidden bg-zinc-950">
+      {/* Sunset glow gradient */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(251, 191, 155, 0.18) 0%, rgba(217, 119, 6, 0.08) 30%, transparent 70%)",
+        }}
+      />
+      {/* Grid pattern */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #fef2e4 1px, transparent 1px),
+            linear-gradient(to bottom, #fef2e4 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-        {/* Architect limits */}
-        <div className="absolute left-[60%] top-0 bottom-0 w-px border-l border-dashed border-zinc-200/80 pointer-events-none hidden md:block z-0" />
+      <div className="relative z-10 flex w-full max-w-[1200px] flex-col items-center px-6 py-24 md:px-10 lg:px-12 md:py-32 text-center">
+        <h2 className="max-w-3xl">
+          <span className="block text-[2.25rem] italic font-serif leading-[1] text-[#fbbf9b] tracking-tight md:text-[3rem] drop-shadow-[0_2px_20px_rgba(0,0,0,0.4)]">
+            Start remembering
+          </span>
+          <span className="mt-2 block text-[2.25rem] font-sans font-bold leading-[1] text-[#fef2e4] tracking-[-0.03em] md:text-[3rem] drop-shadow-[0_2px_24px_rgba(0,0,0,0.5)]">
+            everything.
+          </span>
+        </h2>
 
-        <div className="w-full md:w-[60%] md:pr-16 relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
-          <h2 className="text-[1.85rem] md:text-[2.25rem] tracking-tight font-bold text-zinc-900 mb-3">
-            Start remembering everything.
-          </h2>
-          <p className="text-[1.05rem] text-zinc-600 font-medium max-w-md mb-8">
-            Connect your first source and watch your Mind Graph build itself.
-          </p>
-          <div className="flex items-center gap-4">
-            <button className="group relative inline-flex items-center justify-center bg-transparent px-6 py-2.5 text-[14px] font-bold text-zinc-900 transition-colors">
-              <span className="absolute inset-0 border border-zinc-300 bg-[#fdfdfd]/80 backdrop-blur-sm group-hover:bg-zinc-100 z-0"></span>
-              <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors z-10" />
-              <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors z-10" />
-              <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors z-10" />
-              <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white group-hover:border-zinc-400 transition-colors z-10" />
-              <span className="relative z-20">Get started for free</span>
-            </button>
-            <button className="px-6 py-2.5 border border-zinc-200 text-[14px] font-bold text-zinc-600 hover:bg-zinc-50 transition-colors bg-white">
-              Talk to us
-            </button>
-          </div>
-        </div>
+        <p className="mt-6 max-w-lg text-[1.05rem] md:text-[1.15rem] text-[#fff0e1]/75 font-medium leading-relaxed">
+          Connect your first source and watch your Mind Graph build itself.
+        </p>
 
-        <div className="w-full md:w-[40%] md:pl-16 relative z-10 flex flex-col items-center md:items-start text-center md:text-left mt-12 md:mt-0">
-          <p className="text-[0.95rem] text-zinc-600 font-medium max-w-[240px] mb-6">
-            Check out all of our plans to fit your team or personal workflow.
-          </p>
-          <button className="px-6 py-2 border border-zinc-200 text-[13px] font-bold text-zinc-900 hover:bg-zinc-50 transition-colors bg-white">
-            See our plans
+        <div className="mt-10 flex flex-col items-center gap-5 sm:flex-row">
+          <button className="group relative inline-flex items-center justify-center bg-transparent px-8 py-3.5 text-[15px] font-bold transition-colors">
+            <span className="absolute inset-0 border border-[#fef2e4] bg-[#fef2e4]/95 backdrop-blur-sm transition-colors group-hover:bg-[#fff5e6]" />
+            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-hover:bg-[#fbbf9b]" />
+            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-hover:bg-[#fbbf9b]" />
+            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-hover:bg-[#fbbf9b]" />
+            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-hover:bg-[#fbbf9b]" />
+            <span className="relative z-10 text-zinc-900 tracking-tight">Get started for free</span>
+          </button>
+
+          <button className="group inline-flex items-center gap-1.5 px-4 py-3.5 text-[15px] font-medium text-[#fff0e1]/85 transition-colors hover:text-[#fef2e4]">
+            <span className="underline underline-offset-4 decoration-[#fff0e1]/30 group-hover:decoration-[#fef2e4]/60 transition-colors">Talk to us</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-0.5">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
           </button>
         </div>
 
+        <div className="mt-16 pt-8 border-t border-dashed border-[#fef2e4]/10 w-full max-w-md text-center">
+          <p className="text-[13px] font-medium text-[#fff0e1]/60">
+            Check out all of our plans to fit your team or personal workflow.{" "}
+            <button className="text-[#fbbf9b] underline underline-offset-4 decoration-[#fbbf9b]/40 hover:decoration-[#fbbf9b] transition-colors">
+              See our plans &rarr;
+            </button>
+          </p>
+        </div>
       </div>
     </section>
     </>

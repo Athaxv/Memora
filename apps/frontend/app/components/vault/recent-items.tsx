@@ -47,7 +47,7 @@ export function RecentItems({
   return (
     <div className="mx-auto w-full max-w-[640px] pb-16">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-400">
+        <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706]">
           {label}
         </p>
         <p className="text-[11px] font-medium text-zinc-400">
@@ -55,7 +55,7 @@ export function RecentItems({
         </p>
       </div>
 
-      <div className="border-t border-dashed border-zinc-200">
+      <div className="border-t border-dashed border-[#fbbf9b]/30">
         {memories.map((m) => (
           <VaultItemRow
             key={m.id}
@@ -71,9 +71,9 @@ export function RecentItems({
 
       {loading && (
         <div className="flex items-center justify-center py-6 gap-2">
-          <div className="h-1 w-1 bg-zinc-400 animate-pulse" />
-          <div className="h-1 w-1 bg-zinc-300 animate-pulse [animation-delay:150ms]" />
-          <div className="h-1 w-1 bg-zinc-200 animate-pulse [animation-delay:300ms]" />
+          <div className="h-1 w-1 bg-[#d97706] animate-pulse" />
+          <div className="h-1 w-1 bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
+          <div className="h-1 w-1 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
         </div>
       )}
 

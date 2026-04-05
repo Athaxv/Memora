@@ -27,14 +27,14 @@ const testimonials = [
 
 export function TestimonialsStrip() {
   return (
-    <section className="relative z-20 w-screen -ml-[calc((100vw-100%)/2)] border-y border-zinc-200/80 bg-[#fdfdfd]">
+    <section className="relative z-20 w-screen -ml-[calc((100vw-100%)/2)] border-y border-zinc-200/80 bg-gradient-to-br from-[#fdfdfd] via-[#fef8f0]/40 to-[#fdfdfd]">
       <div className="grid grid-cols-1 divide-y divide-zinc-200/80 md:grid-cols-2 md:divide-x md:divide-y-0">
         {testimonials.map((t) => (
           <div key={t.name} className="flex flex-col items-center px-8 py-10 text-center md:px-16 md:py-12 lg:px-24">
             {/* Company logo/name */}
             <div className="mb-5 flex items-center gap-1.5 text-[15px] font-bold tracking-tight text-zinc-800">
               <span className="text-base">{t.companyIcon}</span>
-              <span className="uppercase tracking-wider text-[13px]">{t.company}</span>
+              <span className="uppercase tracking-wider text-[13px] text-[#d97706]">{t.company}</span>
             </div>
 
             {/* Quote */}

@@ -16,8 +16,12 @@ export function FeaturesSection() {
 
           {/* Left Text Box */}
           <div className="relative z-10 flex w-full max-w-[420px] flex-col justify-start xl:max-w-[460px]">
-             <div className="mb-6 flex h-10 w-10 items-center justify-center border border-zinc-200 bg-white">
-                <div className="h-1.5 w-1.5 bg-emerald-500 rounded-full" />
+             <div className="relative mb-6 inline-flex h-10 w-10 items-center justify-center border border-[#fbbf9b]/50 bg-[#fef2e4]/40">
+                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                <div className="h-1.5 w-1.5 bg-[#d97706] rounded-full" />
              </div>
              
              <h2 className="text-[2.15rem] italic font-serif leading-[1.05] text-[#111118] md:text-[2.65rem] text-balance">
@@ -29,8 +33,13 @@ export function FeaturesSection() {
              </p>
 
              <div className="mt-8">
-               <button className="group text-[14px] font-medium text-zinc-900 flex items-center justify-center px-5 py-2.5 border border-zinc-200 hover:bg-zinc-100 transition-colors">
-                 Explore web capture
+               <button className="group relative inline-flex items-center justify-center bg-transparent px-5 py-2.5 text-[14px] font-bold text-zinc-900 transition-colors">
+                 <span className="absolute inset-0 border border-zinc-200 bg-white transition-colors group-hover:bg-[#fef2e4]/60" />
+                 <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="relative z-10 tracking-tight">Explore web capture</span>
                </button>
              </div>
 
@@ -89,8 +98,8 @@ export function FeaturesSection() {
           {/* Right Text Box */}
           <div className="relative z-10 flex w-full max-w-[420px] flex-col justify-start pt-8 xl:max-w-[460px]">
              <div className="mb-6 flex gap-1">
-                <div className="h-5 w-5 border border-zinc-200 bg-white" />
-                <div className="h-5 w-5 border border-zinc-200 bg-white" />
+                <div className="h-5 w-5 border border-[#fbbf9b]/60 bg-[#fef2e4]/50" />
+                <div className="h-5 w-5 border border-[#fbbf9b]/60 bg-[#fef2e4]/50" />
              </div>
              
              <h2 className="text-[2.15rem] italic font-serif leading-[1.05] text-[#111118] md:text-[2.65rem] text-balance">
@@ -102,8 +111,13 @@ export function FeaturesSection() {
              </p>
 
              <div className="mt-8">
-               <button className="group text-[14px] font-medium text-zinc-900 flex items-center justify-center px-5 py-2.5 border border-zinc-200 hover:bg-zinc-100 transition-colors">
-                 Explore the knowledge graph
+               <button className="group relative inline-flex items-center justify-center bg-transparent px-5 py-2.5 text-[14px] font-bold text-zinc-900 transition-colors">
+                 <span className="absolute inset-0 border border-zinc-200 bg-white transition-colors group-hover:bg-[#fef2e4]/60" />
+                 <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
+                 <span className="relative z-10 tracking-tight">Explore the knowledge graph</span>
                </button>
              </div>
 

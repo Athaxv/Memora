@@ -61,10 +61,10 @@ export function AddSocialLinksStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div className="relative border border-zinc-200/80 bg-white p-10 md:p-12">
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
       <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Add your links
@@ -94,7 +94,7 @@ export function AddSocialLinksStep({ onNext }: { onNext: () => void }) {
               type="url"
               value={values[key]}
               onChange={(e) => updateField(key, e.target.value)}
-              className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
+              className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
               placeholder={placeholder}
             />
           </div>
@@ -120,7 +120,7 @@ export function AddSocialLinksStep({ onNext }: { onNext: () => void }) {
         <button
           type="button"
           onClick={onNext}
-          className="underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-500 hover:text-zinc-600 transition-colors"
+          className="underline underline-offset-4 decoration-[#fbbf9b]/50 hover:decoration-[#d97706] hover:text-[#d97706] transition-colors"
         >
           Skip for now
         </button>

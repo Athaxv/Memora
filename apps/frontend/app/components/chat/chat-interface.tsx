@@ -67,93 +67,121 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[#fef8f0]">
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-4"
+        className="flex-1 overflow-y-auto px-6 py-8"
       >
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="mb-4 text-4xl">💬</div>
-            <h3 className="mb-2 text-lg font-medium text-zinc-700 dark:text-zinc-300">
-              Chat with your memories
-            </h3>
-            <p className="max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-              Ask questions, search by meaning, or explore connections in your
-              memory graph
-            </p>
-          </div>
-        )}
+        <div className="mx-auto max-w-[720px] space-y-5">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+              <div className="relative mb-6 inline-flex h-12 w-12 items-center justify-center border border-[#fbbf9b]/60 bg-white">
+                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <h3 className="mb-2 text-[1.25rem] font-bold text-[#111118] tracking-tight">
+                Chat with your memories
+              </h3>
+              <p className="max-w-sm text-[13px] font-medium text-zinc-500 leading-relaxed">
+                Ask questions, search by meaning, or explore connections in your memory graph.
+              </p>
+            </div>
+          )}
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+          {messages.map((msg, i) => (
             <div
-              className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${
-                msg.role === "user"
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
-              }`}
+              key={i}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              <div
+                className={`relative max-w-[80%] border px-4 py-3 text-[14px] ${
+                  msg.role === "user"
+                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    : "border-[#fbbf9b]/40 bg-white text-zinc-800"
+                }`}
+              >
+                {/* Corner squares */}
+                <span className={`absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border ${msg.role === "user" ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fbbf9b] bg-[#fef2e4]"}`} />
+                <span className={`absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border ${msg.role === "user" ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fbbf9b] bg-[#fef2e4]"}`} />
+                <span className={`absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border ${msg.role === "user" ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fbbf9b] bg-[#fef2e4]"}`} />
+                <span className={`absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border ${msg.role === "user" ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fbbf9b] bg-[#fef2e4]"}`} />
 
-              {msg.memories && msg.memories.length > 0 && (
-                <div className="mt-3 space-y-2 border-t border-zinc-200 pt-2 dark:border-zinc-700">
-                  <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    Referenced memories:
-                  </p>
-                  {msg.memories.map((m) => (
-                    <a
-                      key={m.id}
-                      href={`/memories/${m.id}`}
-                      className="block rounded-md bg-white/50 px-3 py-2 text-xs hover:bg-white dark:bg-zinc-900/50 dark:hover:bg-zinc-900"
-                    >
-                      <span className="font-medium">
-                        {m.title || "Untitled"}
-                      </span>
-                      {m.summary && (
-                        <span className="ml-1 text-zinc-500">
-                          — {m.summary.slice(0, 80)}...
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+
+                {msg.memories && msg.memories.length > 0 && (
+                  <div className="mt-4 space-y-2 border-t border-dashed border-[#fbbf9b]/40 pt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#d97706]">
+                      Referenced memories
+                    </p>
+                    {msg.memories.map((m) => (
+                      <a
+                        key={m.id}
+                        href={`/memories/${m.id}`}
+                        className="block border border-[#fbbf9b]/30 bg-[#fef8f0] px-3 py-2 text-[12px] hover:border-[#fbbf9b]/60 hover:bg-[#fef2e4]/80 transition-colors"
+                      >
+                        <span className="font-bold text-zinc-800">
+                          {m.title || "Untitled"}
                         </span>
-                      )}
-                    </a>
-                  ))}
-                </div>
-              )}
+                        {m.summary && (
+                          <span className="ml-1 text-zinc-500">
+                            — {m.summary.slice(0, 80)}...
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {loading && (
-          <div className="flex justify-start">
-            <div className="rounded-xl bg-zinc-100 px-4 py-3 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-              Thinking...
+          {loading && (
+            <div className="flex justify-start">
+              <div className="border border-[#fbbf9b]/40 bg-white px-4 py-3 flex items-center gap-2">
+                <div className="h-1 w-1 bg-[#d97706] animate-pulse" />
+                <div className="h-1 w-1 bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
+                <div className="h-1 w-1 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <form
         onSubmit={handleSend}
-        className="border-t border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+        className="border-t border-[#fbbf9b]/25 bg-[#fef8f0] px-6 py-4"
       >
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about your memories..."
-            disabled={loading}
-            className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-500"
-          />
+        <div className="mx-auto max-w-[720px] flex gap-2">
+          <div className="relative flex-1 group">
+            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
+            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
+            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
+            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about your memories..."
+              disabled={loading}
+              className="w-full border border-zinc-200 bg-white px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
+            />
+          </div>
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="group relative bg-transparent px-6 py-2.5 text-[13px] font-bold text-white transition-colors disabled:opacity-40"
           >
-            Send
+            <span className="absolute inset-0 border border-zinc-900 bg-zinc-900 transition-colors group-hover:bg-zinc-800" />
+            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+            <span className="relative z-10 tracking-tight">Send</span>
           </button>
         </div>
       </form>
