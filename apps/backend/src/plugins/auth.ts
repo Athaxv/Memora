@@ -12,15 +12,20 @@ declare module "@fastify/jwt" {
 export async function registerAuth(app: FastifyInstance) {
   await app.register(fjwt, {
     secret: config.JWT_SECRET,
+    sign: { expiresIn: `${config.ACCESS_TOKEN_TTL_SECONDS}s` },
   });
 
   app.decorate(
     "authenticate",
     async function (request: FastifyRequest, reply: FastifyReply) {
+      const token = request.cookies.access_token;
+      if (!token) {
+        return reply.code(401).send({ error: "Unauthorized" });
+      }
       try {
-        await request.jwtVerify();
+        request.user = app.jwt.verify<{ id: string; email: string }>(token);
       } catch {
-        reply.code(401).send({ error: "Unauthorized" });
+        return reply.code(401).send({ error: "Unauthorized" });
       }
     }
   );
