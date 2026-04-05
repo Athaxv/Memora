@@ -12,7 +12,7 @@ import {
   PanelLeft,
   User,
 } from "lucide-react";
-import { clearToken } from "@/lib/token";
+import { logout } from "@/lib/api";
 
 const STORAGE_KEY = "memory_os_sidebar_collapsed";
 
@@ -42,8 +42,9 @@ export function Sidebar() {
     });
   }
 
-  function handleSignOut() {
-    clearToken();
+  async function handleSignOut() {
+    await logout();
+    // Hard navigation flushes any stale React state tied to the old user.
     window.location.href = "/login";
   }
 
@@ -54,7 +55,7 @@ export function Sidebar() {
     <aside
       className={`
         ${collapsed ? "w-[60px]" : "w-56"}
-        flex h-screen shrink-0 flex-col border-r border-zinc-200/80 bg-[#fdfdfd]
+        flex h-screen shrink-0 flex-col border-r border-[#fbbf9b]/25 bg-[#fef8f0]
         transition-all duration-300 ease-in-out
         ${mounted ? "opacity-100" : "opacity-0"}
       `}
@@ -94,7 +95,7 @@ export function Sidebar() {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={`
             flex items-center gap-3 rounded-sm px-3 py-2
-            text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50
+            text-zinc-400 hover:text-zinc-700 hover:bg-[#fef2e4]/60
             transition-all duration-150 w-full
             ${collapsed ? "justify-center px-0" : ""}
           `}
@@ -117,7 +118,7 @@ export function Sidebar() {
       </div>
 
       {/* Divider */}
-      <div className="border-t border-zinc-200/80" />
+      <div className="border-t border-[#fbbf9b]/25" />
 
       {/* Navigation */}
       <nav className="flex-1 flex flex-col gap-1 px-2 pt-3">
@@ -135,8 +136,8 @@ export function Sidebar() {
                 transition-all duration-150
                 ${
                   active
-                    ? "bg-white border border-zinc-200 text-[#111118] font-semibold"
-                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-700 border border-transparent"
+                    ? "bg-white border border-[#fbbf9b]/40 text-[#111118] font-semibold"
+                    : "text-zinc-500 hover:bg-[#fef2e4]/60 hover:text-[#d97706] border border-transparent"
                 }
                 ${collapsed ? "justify-center px-2" : "px-3"}
               `}
@@ -144,10 +145,10 @@ export function Sidebar() {
               {/* Corner accents on active item */}
               {active && (
                 <>
-                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
+                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
                 </>
               )}
 
@@ -167,13 +168,13 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-zinc-200/80 px-2 py-3">
+      <div className="border-t border-[#fbbf9b]/25 px-2 py-3">
         <button
           onClick={handleSignOut}
           title={collapsed ? "Sign out" : undefined}
           className={`
             flex items-center gap-3 rounded-sm py-2.5 w-full
-            text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50
+            text-zinc-400 hover:text-zinc-900 hover:bg-[#fef2e4]/60
             transition-all duration-150
             ${collapsed ? "justify-center px-2" : "px-3"}
           `}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/token";
+import { api } from "@/lib/api";
 import { WelcomeStep } from "@/app/components/onboarding/welcome-step";
 import { SaveFirstLinkStep } from "@/app/components/onboarding/save-first-link-step";
 import { UploadResumeStep } from "@/app/components/onboarding/upload-resume-step";
@@ -14,9 +14,11 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-    }
+    // Verify session via /auth/me — the api() wrapper handles refresh-on-401
+    // and redirects to /login itself if refresh fails.
+    api("/auth/me").then((res) => {
+      if (!res.ok) router.replace("/login");
+    });
   }, [router]);
 
   return (
@@ -28,10 +30,10 @@ export default function OnboardingPage() {
             key={s}
             className={`h-1.5 w-1.5 border transition-colors ${
               s === step
-                ? "border-zinc-900 bg-zinc-900"
+                ? "border-[#d97706] bg-[#d97706]"
                 : s < step
-                  ? "border-zinc-400 bg-zinc-400"
-                  : "border-zinc-300 bg-[#fdfdfd]"
+                  ? "border-[#fbbf9b] bg-[#fbbf9b]"
+                  : "border-[#fbbf9b]/40 bg-[#fef2e4]"
             }`}
           />
         ))}

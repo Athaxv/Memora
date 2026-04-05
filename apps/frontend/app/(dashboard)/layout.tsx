@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/token";
 import { api } from "@/lib/api";
 import { Sidebar } from "@/app/components/dashboard/sidebar";
 
@@ -15,12 +14,8 @@ export default function DashboardLayout({
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-
+    // The api() wrapper handles 401 → refresh → retry automatically.
+    // If refresh fails it redirects to /login itself.
     api("/auth/me").then((res) => {
       if (!res.ok) {
         router.replace("/login");
@@ -38,8 +33,12 @@ export default function DashboardLayout({
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fdfdfd]">
-        <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
+      <div className="flex min-h-screen items-center justify-center bg-[#fef8f0]">
+        <div className="flex gap-1.5">
+          <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
+          <div className="h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
+          <div className="h-1.5 w-1.5 border border-[#fbbf9b]/50 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+        </div>
       </div>
     );
   }

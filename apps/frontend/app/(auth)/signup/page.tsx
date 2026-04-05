@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
-import { setToken } from "@/lib/token";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { api, API_URL } from "@/lib/api";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -32,8 +29,8 @@ export default function SignUpPage() {
         return;
       }
 
-      const data = await res.json();
-      setToken(data.token);
+      // Cookies (access + refresh) were set server-side on this response.
+      await res.json();
       window.location.href = "/onboarding";
     } catch {
       setError("Something went wrong");
@@ -44,10 +41,10 @@ export default function SignUpPage() {
   return (
     <div className="relative border border-zinc-200/80 bg-white p-10 md:p-12">
       {/* Corner squares */}
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-[#fdfdfd]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
       <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Create account
@@ -58,7 +55,7 @@ export default function SignUpPage() {
 
       <button
         onClick={() => { window.location.href = `${API_URL}/auth/google`; }}
-        className="mb-5 flex w-full items-center justify-center gap-2.5 border border-zinc-200 bg-[#fdfdfd] px-4 py-3 text-[14px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+        className="mb-5 flex w-full items-center justify-center gap-2.5 border border-zinc-200 bg-[#fdfdfd] px-4 py-3 text-[14px] font-medium text-zinc-700 transition-colors hover:bg-[#fef8f0]"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -97,7 +94,7 @@ export default function SignUpPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
             placeholder="Your name"
           />
         </div>
@@ -112,7 +109,7 @@ export default function SignUpPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
             placeholder="you@example.com"
           />
         </div>
@@ -128,7 +125,7 @@ export default function SignUpPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
             placeholder="Min 8 characters"
           />
         </div>
@@ -151,7 +148,7 @@ export default function SignUpPage() {
 
       <p className="mt-6 text-center text-[13px] font-medium text-zinc-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-zinc-900 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors">
+        <Link href="/login" className="text-zinc-900 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors">
           Sign in
         </Link>
       </p>
