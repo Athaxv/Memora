@@ -5,6 +5,12 @@ import { users, nodes } from "@repo/db/schema";
 import { signUpSchema, loginSchema, updateProfileSchema } from "@repo/validators";
 import { db } from "../../db";
 import { config } from "../../config";
+import {
+  issueTokenPair,
+  rotateRefreshToken,
+  revokeFamily,
+  clearAuthCookies,
+} from "../../lib/tokens";
 
 const AVATAR_CHOICES = ["/char1.png", "/char2.png", "/char3.png"];
 function randomAvatar() {
@@ -53,9 +59,9 @@ export async function authRoutes(app: FastifyInstance) {
         });
 
       const user = result[0]!;
-      const token = app.jwt.sign({ id: user.id, email: user.email });
+      await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
 
-      return reply.code(201).send({ user, token });
+      return reply.code(201).send({ user });
     } catch (error) {
       if (error instanceof Error && error.name === "ZodError") {
         return reply.code(400).send({ error: "Invalid input" });
@@ -84,7 +90,7 @@ export async function authRoutes(app: FastifyInstance) {
         return reply.code(401).send({ error: "Invalid credentials" });
       }
 
-      const token = app.jwt.sign({ id: user.id, email: user.email });
+      await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
 
       return reply.send({
         user: {
@@ -93,7 +99,6 @@ export async function authRoutes(app: FastifyInstance) {
           name: user.name,
           onboardingCompleted: user.onboardingCompleted,
         },
-        token,
       });
     } catch (error) {
       if (error instanceof Error && error.name === "ZodError") {
@@ -184,15 +189,50 @@ export async function authRoutes(app: FastifyInstance) {
           .where(eq(users.id, user.id));
       }
 
-      // Issue JWT
-      const token = app.jwt.sign({ id: user.id, email: user.email });
+      // Issue token pair and set cookies on the redirect response
+      await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
 
-      // Redirect to frontend with token
-      return reply.redirect(`${config.FRONTEND_URL}/auth/callback?token=${encodeURIComponent(token)}`);
+      // Decide destination based on onboarding status.
+      // We need the latest value — fetch fresh since the user may have just been created.
+      const [fresh] = await db
+        .select({ onboardingCompleted: users.onboardingCompleted })
+        .from(users)
+        .where(eq(users.id, user.id));
+      const next = fresh?.onboardingCompleted ? "/vault" : "/onboarding";
+      return reply.redirect(`${config.FRONTEND_URL}${next}`);
     } catch (error) {
       request.log.error(error);
       return reply.redirect(`${config.FRONTEND_URL}/login?error=server`);
     }
+  });
+
+  // POST /auth/refresh — public (but requires refresh cookie)
+  // Rotates the refresh token and issues new access + refresh cookies.
+  // If the presented token was already rotated (reuse detection), revokes
+  // the entire family.
+  app.post("/refresh", async (request, reply) => {
+    const raw = request.cookies.refresh_token;
+    if (!raw) {
+      return reply.code(401).send({ error: "No refresh token" });
+    }
+
+    const result = await rotateRefreshToken(app, request, reply, raw);
+    if (!result.ok) {
+      clearAuthCookies(reply);
+      return reply.code(401).send({ error: result.reason });
+    }
+    return reply.send({ ok: true });
+  });
+
+  // POST /auth/logout — public and idempotent
+  // Revokes the entire refresh token family and clears cookies.
+  app.post("/logout", async (request, reply) => {
+    const raw = request.cookies.refresh_token;
+    if (raw) {
+      await revokeFamily(raw);
+    }
+    clearAuthCookies(reply);
+    return reply.send({ ok: true });
   });
 
   // GET /auth/me — authenticated
