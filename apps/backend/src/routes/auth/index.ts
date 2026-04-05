@@ -1,10 +1,15 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
-import { users } from "@repo/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { users, nodes } from "@repo/db/schema";
 import { signUpSchema, loginSchema, updateProfileSchema } from "@repo/validators";
 import { db } from "../../db";
 import { config } from "../../config";
+
+const AVATAR_CHOICES = ["/char1.png", "/char2.png", "/char3.png"];
+function randomAvatar() {
+  return AVATAR_CHOICES[Math.floor(Math.random() * AVATAR_CHOICES.length)];
+}
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -35,10 +40,11 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       const hashedPassword = await bcrypt.hash(password, 12);
+      const avatarUrl = randomAvatar();
 
       const result = await db
         .insert(users)
-        .values({ name, email, hashedPassword })
+        .values({ name, email, hashedPassword, avatarUrl })
         .returning({
           id: users.id,
           email: users.email,
@@ -166,7 +172,7 @@ export async function authRoutes(app: FastifyInstance) {
           .values({
             email: googleUser.email,
             name: googleUser.name,
-            avatarUrl: googleUser.picture,
+            avatarUrl: googleUser.picture || randomAvatar(),
           })
           .returning();
         user = result[0]!;
@@ -200,6 +206,8 @@ export async function authRoutes(app: FastifyInstance) {
         name: users.name,
         avatarUrl: users.avatarUrl,
         onboardingCompleted: users.onboardingCompleted,
+        socialLinks: users.socialLinks,
+        resumeNodeId: users.resumeNodeId,
       })
       .from(users)
       .where(eq(users.id, userId));
@@ -208,7 +216,16 @@ export async function authRoutes(app: FastifyInstance) {
       return reply.code(404).send({ error: "User not found" });
     }
 
-    return reply.send(user);
+    let resumeNode: { id: string; title: string | null } | null = null;
+    if (user.resumeNodeId) {
+      const [node] = await db
+        .select({ id: nodes.id, title: nodes.title })
+        .from(nodes)
+        .where(eq(nodes.id, user.resumeNodeId));
+      resumeNode = node || null;
+    }
+
+    return reply.send({ ...user, resumeNode });
   });
 
   // PATCH /auth/me — authenticated
@@ -227,6 +244,8 @@ export async function authRoutes(app: FastifyInstance) {
           name: users.name,
           avatarUrl: users.avatarUrl,
           onboardingCompleted: users.onboardingCompleted,
+          socialLinks: users.socialLinks,
+          resumeNodeId: users.resumeNodeId,
         });
 
       if (!user) {
@@ -241,5 +260,25 @@ export async function authRoutes(app: FastifyInstance) {
       request.log.error(error);
       return reply.code(500).send({ error: "Internal server error" });
     }
+  });
+
+  // GET /auth/me/stats — authenticated
+  app.get("/me/stats", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id: userId } = request.user;
+
+    const [user] = await db
+      .select({ createdAt: users.createdAt })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(nodes)
+      .where(eq(nodes.userId, userId));
+
+    return reply.send({
+      memoriesCount: Number(countResult?.count || 0),
+      memberSince: user?.createdAt,
+    });
   });
 }

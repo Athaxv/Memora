@@ -30,12 +30,29 @@ export const searchSchema = z.object({
   type: z.string().optional(),
 });
 
+export const socialLinksSchema = z.object({
+  github: z.string().url().max(500).optional().or(z.literal("")),
+  linkedin: z.string().url().max(500).optional().or(z.literal("")),
+  twitter: z.string().url().max(500).optional().or(z.literal("")),
+  portfolio: z.string().url().max(500).optional().or(z.literal("")),
+});
+
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   onboardingCompleted: z.boolean().optional(),
+  socialLinks: socialLinksSchema.optional(),
+  resumeNodeId: z.string().length(26).optional(),
 });
 
 export const chatSchema = z.object({
   conversationId: z.string().uuid().optional(),
   message: z.string().min(1).max(5000),
+});
+
+export const whatsappLinkSchema = z.object({
+  phoneNumber: z.string().regex(/^\d{10,15}$/, "Phone number must be 10-15 digits"),
+});
+
+export const whatsappVerifySchema = z.object({
+  code: z.string().length(6, "Code must be 6 digits"),
 });
