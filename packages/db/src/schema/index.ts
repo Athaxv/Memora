@@ -7,3 +7,5 @@ export { nodeTags } from "./node-tags";
 export { conversations } from "./conversations";
 export { messages, messageRoleEnum } from "./messages";
 export { whatsappLinks } from "./whatsapp-links";
+export { telegramLinks } from "./telegram-links";
+export { telegramLinkSessions } from "./telegram-link-sessions";
