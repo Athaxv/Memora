@@ -2,12 +2,12 @@ import { z } from "zod";
 
 export const signUpSchema = z.object({
   name: z.string().min(1).max(255),
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(100),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
 
@@ -54,5 +54,16 @@ export const whatsappLinkSchema = z.object({
 });
 
 export const whatsappVerifySchema = z.object({
+  code: z.string().length(6, "Code must be 6 digits"),
+});
+
+export const telegramLinkSchema = z.object({
+  chatId: z
+    .string()
+    .trim()
+    .regex(/^\d{6,20}$/, "Chat ID must be 6-20 digits"),
+});
+
+export const telegramVerifySchema = z.object({
   code: z.string().length(6, "Code must be 6 digits"),
 });
