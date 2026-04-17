@@ -4,12 +4,14 @@ import { registerCors } from "./plugins/cors";
 import { registerCookies } from "./plugins/cookies";
 import { registerAuth } from "./plugins/auth";
 import { registerMultipart } from "./plugins/multipart";
+import { registerRateLimit } from "./plugins/rate-limit";
 import { authRoutes } from "./routes/auth/index";
 import { memoriesRoutes } from "./routes/memories/index";
 import { ingestRoutes } from "./routes/ingest/index";
 import { tagsRoutes } from "./routes/tags/index";
 import { chatRoutes } from "./routes/chat/index";
 import { whatsappRoutes } from "./routes/whatsapp/index";
+import { telegramRoutes } from "./routes/telegram/index";
 
 async function main() {
   const app = Fastify({ logger: true });
@@ -19,6 +21,7 @@ async function main() {
   await registerCookies(app);
   await registerAuth(app);
   await registerMultipart(app);
+  await registerRateLimit(app);
 
   // Routes
   await app.register(authRoutes, { prefix: "/auth" });
@@ -27,6 +30,7 @@ async function main() {
   await app.register(tagsRoutes, { prefix: "/tags" });
   await app.register(chatRoutes, { prefix: "/chat" });
   await app.register(whatsappRoutes, { prefix: "/whatsapp" });
+  await app.register(telegramRoutes, { prefix: "/telegram" });
 
   // Health check
   app.get("/health", async () => ({ status: "ok" }));
