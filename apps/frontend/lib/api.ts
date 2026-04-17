@@ -39,7 +39,11 @@ export async function api(
   const doFetch = () => {
     const headers = new Headers(options.headers);
     // Don't set Content-Type for FormData (browser sets multipart boundary)
-    if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    if (
+      options.body !== undefined &&
+      !(options.body instanceof FormData) &&
+      !headers.has("Content-Type")
+    ) {
       headers.set("Content-Type", "application/json");
     }
     return fetch(`${API_URL}${path}`, {
