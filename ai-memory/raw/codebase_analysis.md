@@ -1,0 +1,101 @@
+# Codebase Analysis (Raw Notes)
+
+## Sources scanned
+- [README.md](README.md)
+- [PRD.md](PRD.md)
+- [context.md](context.md)
+- [turbo.json](turbo.json)
+- [package.json](package.json)
+- [apps/backend/src/index.ts](apps/backend/src/index.ts)
+- [apps/backend/src/config.ts](apps/backend/src/config.ts)
+- [apps/backend/src/db.ts](apps/backend/src/db.ts)
+- [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts)
+- [apps/backend/src/routes/memories/index.ts](apps/backend/src/routes/memories/index.ts)
+- [apps/backend/src/routes/ingest/index.ts](apps/backend/src/routes/ingest/index.ts)
+- [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts)
+- [apps/backend/src/routes/tags/index.ts](apps/backend/src/routes/tags/index.ts)
+- [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts)
+- [apps/backend/src/lib/tokens.ts](apps/backend/src/lib/tokens.ts)
+- [apps/frontend/app/layout.tsx](apps/frontend/app/layout.tsx)
+- [apps/frontend/app/page.tsx](apps/frontend/app/page.tsx)
+- [apps/frontend/lib/api.ts](apps/frontend/lib/api.ts)
+- [packages/db/src/schema/index.ts](packages/db/src/schema/index.ts)
+- [packages/db/src/schema/users.ts](packages/db/src/schema/users.ts)
+- [packages/db/src/schema/nodes.ts](packages/db/src/schema/nodes.ts)
+- [packages/db/src/schema/edges.ts](packages/db/src/schema/edges.ts)
+- [packages/db/src/schema/auth.ts](packages/db/src/schema/auth.ts)
+- [packages/db/src/schema/whatsapp-links.ts](packages/db/src/schema/whatsapp-links.ts)
+- [packages/ai/src/index.ts](packages/ai/src/index.ts)
+- [packages/graph/src/index.ts](packages/graph/src/index.ts)
+- [packages/ingestion/src/pipeline.ts](packages/ingestion/src/pipeline.ts)
+- [packages/validators/src/index.ts](packages/validators/src/index.ts)
+
+## Monorepo overview
+- Turborepo + Bun workspace. Tasks are defined in [turbo.json](turbo.json) and root scripts in [package.json](package.json).
+- Apps include a Next.js frontend in [apps/frontend](apps/frontend) and a Fastify backend in [apps/backend](apps/backend). Additional apps exist (docs, web, landing-page) but appear secondary.
+- Shared packages include database schema/client, AI utilities, graph operations, ingestion pipeline, validators, UI, and config packages.
+
+## Backend (Fastify)
+- Entry point wires plugins and routes in [apps/backend/src/index.ts](apps/backend/src/index.ts).
+- Config and env vars in [apps/backend/src/config.ts](apps/backend/src/config.ts).
+- Auth routes implement email/password + Google OAuth and cookie-based JWT sessions in [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts).
+- Token rotation + refresh family logic in [apps/backend/src/lib/tokens.ts](apps/backend/src/lib/tokens.ts).
+- Memories API provides list, detail, update, delete, and semantic search in [apps/backend/src/routes/memories/index.ts](apps/backend/src/routes/memories/index.ts).
+- Ingestion API accepts text/URL and file uploads in [apps/backend/src/routes/ingest/index.ts](apps/backend/src/routes/ingest/index.ts).
+- Chat API uses intent classification + semantic search + Groq completion in [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts) and [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts).
+
+## Frontend (Next.js)
+- Next.js app located under [apps/frontend/app](apps/frontend/app).
+- API client uses cookie auth and single-flight refresh in [apps/frontend/lib/api.ts](apps/frontend/lib/api.ts).
+- No Next.js API routes detected under [apps/frontend/app/api](apps/frontend/app/api).
+
+## Database schema
+- Core tables: users, nodes, edges, tags, node_tags, conversations, messages in [packages/db/src/schema](packages/db/src/schema).
+- Auth-related tables include accounts/sessions/verification_tokens and refresh_tokens in [packages/db/src/schema/auth.ts](packages/db/src/schema/auth.ts).
+- WhatsApp link table in [packages/db/src/schema/whatsapp-links.ts](packages/db/src/schema/whatsapp-links.ts).
+- Nodes use ULID (length 26), edges are typed, embeddings are pgvector(768) in [packages/db/src/schema/nodes.ts](packages/db/src/schema/nodes.ts) and [packages/db/src/schema/edges.ts](packages/db/src/schema/edges.ts).
+
+## AI + graph + ingestion
+- AI utilities export embeddings, summarize, auto-tag, intent in [packages/ai/src/index.ts](packages/ai/src/index.ts).
+- Graph package exports node CRUD, edges, traversal, search, tags in [packages/graph/src/index.ts](packages/graph/src/index.ts).
+- Ingestion pipeline orchestrates extract -> summarize -> embed -> tag -> create node -> link tags -> compute edges in [packages/ingestion/src/pipeline.ts](packages/ingestion/src/pipeline.ts).
+
+## Validators
+- Zod schemas for auth, ingestion, search, chat, profile updates in [packages/validators/src/index.ts](packages/validators/src/index.ts).
+
+## Noted mismatches / drift
+- PRD and architecture context describe Next.js API routes + NextAuth, but current implementation uses a Fastify backend with custom JWT cookies. The database still contains NextAuth-style tables, likely for compatibility or future use.
+- PRD and context highlight Next.js apps in apps/web and apps/docs; current active app appears to be apps/frontend with backend in apps/backend.
+
+## Incident notes
+- 2026-04-17: `/auth/signup` intermittently returned 500 with `NeonDbError: relation "refresh_tokens" does not exist` during token issuance in [apps/backend/src/lib/tokens.ts](apps/backend/src/lib/tokens.ts).
+- Root cause: database schema drift. Drizzle migrations in [packages/db/drizzle](packages/db/drizzle) did not include newer auth/session tables in applied state.
+- Resolution:
+	- Generated migration [packages/db/drizzle/0002_workable_roughhouse.sql](packages/db/drizzle/0002_workable_roughhouse.sql).
+	- Reconciled live database using `npm run db:push` in [packages/db](packages/db).
+	- Added defensive rollback/error handling in [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts) so signup does not leave partially created users when token issuance fails.
+
+## Implementation notes (2026-04-17, auth hardening + chat persistence)
+- Added Fastify rate-limiting plugin in [apps/backend/src/plugins/rate-limit.ts](apps/backend/src/plugins/rate-limit.ts) and registered it in [apps/backend/src/index.ts](apps/backend/src/index.ts).
+- Added route-level limits for `/auth/signup`, `/auth/login`, and `/auth/google/callback` in [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts).
+- Added OAuth state generation/validation via cookie on Google auth flow in [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts).
+- Added profile patch validation for `resumeNodeId` ownership in [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts).
+- Added chat persistence to `conversations` and `messages` in [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts), including conversation ownership checks.
+- Updated auth validator normalization in [packages/validators/src/index.ts](packages/validators/src/index.ts) to canonicalize email input.
+
+## Implementation notes (2026-04-17, Telegram dual support)
+- Added Telegram schema table in [packages/db/src/schema/telegram-links.ts](packages/db/src/schema/telegram-links.ts) and export in [packages/db/src/schema/index.ts](packages/db/src/schema/index.ts).
+- Added migration script [packages/db/drizzle/0003_telegram_links.sql](packages/db/drizzle/0003_telegram_links.sql).
+- Added Telegram config vars in [apps/backend/src/config.ts](apps/backend/src/config.ts): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, and `PRIMARY_BOT`.
+- Added Telegram validators in [packages/validators/src/index.ts](packages/validators/src/index.ts): `telegramLinkSchema` and `telegramVerifySchema`.
+- Added Telegram service in [apps/backend/src/services/telegram.ts](apps/backend/src/services/telegram.ts) for bot `sendMessage` calls.
+- Added Telegram routes in [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts): webhook + authenticated link/verify/status/unlink endpoints.
+- Registered Telegram routes in [apps/backend/src/index.ts](apps/backend/src/index.ts) under `/telegram` while preserving `/whatsapp`.
+- Added Telegram settings UI in [apps/frontend/app/components/settings/telegram-link.tsx](apps/frontend/app/components/settings/telegram-link.tsx) and rendered Telegram first in [apps/frontend/app/(dashboard)/settings/page.tsx](apps/frontend/app/(dashboard)/settings/page.tsx).
+
+## Implementation notes (2026-04-17, Telegram deep-link UX)
+- Added Telegram link session schema [packages/db/src/schema/telegram-link-sessions.ts](packages/db/src/schema/telegram-link-sessions.ts) and migration [packages/db/drizzle/0004_telegram_link_sessions.sql](packages/db/drizzle/0004_telegram_link_sessions.sql).
+- Added authenticated endpoint `POST /telegram/link/start` in [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts) to mint short-lived single-use deep-link tokens.
+- Updated Telegram webhook in [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts) to handle `/start <token>`, validate token hash/expiry, and auto-link the incoming Telegram `chat.id`.
+- Updated Telegram settings UI in [apps/frontend/app/components/settings/telegram-link.tsx](apps/frontend/app/components/settings/telegram-link.tsx) to remove manual chat ID entry and use one-click connect + pending polling.
+- Validation: `bun --filter @repo/db check-types`, `bun --filter backend check-types`, and `bun --filter frontend check-types` all passed; `bun db:push` applied schema changes successfully.
