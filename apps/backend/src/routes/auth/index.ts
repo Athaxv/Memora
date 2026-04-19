@@ -1,6 +1,7 @@
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyReply } from "fastify";
 import bcrypt from "bcryptjs";
-import { eq, sql } from "drizzle-orm";
+import crypto from "node:crypto";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { users, nodes } from "@repo/db/schema";
 import { signUpSchema, loginSchema, updateProfileSchema } from "@repo/validators";
 import { db } from "../../db";
@@ -17,6 +18,9 @@ function randomAvatar() {
   return AVATAR_CHOICES[Math.floor(Math.random() * AVATAR_CHOICES.length)];
 }
 
+const OAUTH_STATE_COOKIE = "oauth_state";
+const OAUTH_STATE_TTL_SECONDS = 5 * 60;
+
 interface GoogleTokenResponse {
   access_token: string;
   id_token: string;
@@ -30,11 +34,50 @@ interface GoogleUserInfo {
   picture: string;
 }
 
+function isMissingRefreshTokensRelation(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { code?: string; message?: string };
+  return (
+    err.code === "42P01" &&
+    typeof err.message === "string" &&
+    err.message.includes("refresh_tokens")
+  );
+}
+
+function setOauthStateCookie(reply: FastifyReply, state: string) {
+  const isProd = config.NODE_ENV === "production";
+  reply.setCookie(OAUTH_STATE_COOKIE, state, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    domain: config.COOKIE_DOMAIN,
+    path: "/auth/google/callback",
+    maxAge: OAUTH_STATE_TTL_SECONDS,
+  });
+}
+
+function clearOauthStateCookie(reply: FastifyReply) {
+  reply.clearCookie(OAUTH_STATE_COOKIE, {
+    domain: config.COOKIE_DOMAIN,
+    path: "/auth/google/callback",
+  });
+}
+
+function safeStateEquals(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
 export async function authRoutes(app: FastifyInstance) {
   // POST /auth/signup — public
-  app.post("/signup", async (request, reply) => {
-    try {
-      const { name, email, password } = signUpSchema.parse(request.body);
+  app.post(
+    "/signup",
+    { config: { rateLimit: { max: 5, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      try {
+        const { name, email, password } = signUpSchema.parse(request.body);
 
       const [existing] = await db
         .select()
@@ -59,22 +102,38 @@ export async function authRoutes(app: FastifyInstance) {
         });
 
       const user = result[0]!;
-      await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
-
-      return reply.code(201).send({ user });
-    } catch (error) {
-      if (error instanceof Error && error.name === "ZodError") {
-        return reply.code(400).send({ error: "Invalid input" });
+      try {
+        await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
+      } catch (error) {
+        // Avoid leaving an account created without a valid auth session on token issuance failure.
+        await db.delete(users).where(eq(users.id, user.id));
+        if (isMissingRefreshTokensRelation(error)) {
+          request.log.error(error, "Missing refresh_tokens table during signup");
+          return reply.code(500).send({
+            error: "Authentication schema is out of date. Run DB migrations and retry.",
+          });
+        }
+        throw error;
       }
-      request.log.error(error);
-      return reply.code(500).send({ error: "Internal server error" });
+
+        return reply.code(201).send({ user });
+      } catch (error) {
+        if (error instanceof Error && error.name === "ZodError") {
+          return reply.code(400).send({ error: "Invalid input" });
+        }
+        request.log.error(error);
+        return reply.code(500).send({ error: "Internal server error" });
+      }
     }
-  });
+  );
 
   // POST /auth/login — public
-  app.post("/login", async (request, reply) => {
-    try {
-      const { email, password } = loginSchema.parse(request.body);
+  app.post(
+    "/login",
+    { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      try {
+        const { email, password } = loginSchema.parse(request.body);
 
       const [user] = await db
         .select()
@@ -90,27 +149,41 @@ export async function authRoutes(app: FastifyInstance) {
         return reply.code(401).send({ error: "Invalid credentials" });
       }
 
-      await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
-
-      return reply.send({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          onboardingCompleted: user.onboardingCompleted,
-        },
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === "ZodError") {
-        return reply.code(400).send({ error: "Invalid input" });
+      try {
+        await issueTokenPair(app, request, reply, { id: user.id, email: user.email });
+      } catch (error) {
+        if (isMissingRefreshTokensRelation(error)) {
+          request.log.error(error, "Missing refresh_tokens table during login");
+          return reply.code(500).send({
+            error: "Authentication schema is out of date. Run DB migrations and retry.",
+          });
+        }
+        throw error;
       }
-      request.log.error(error);
-      return reply.code(500).send({ error: "Internal server error" });
+
+        return reply.send({
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            onboardingCompleted: user.onboardingCompleted,
+          },
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name === "ZodError") {
+          return reply.code(400).send({ error: "Invalid input" });
+        }
+        request.log.error(error);
+        return reply.code(500).send({ error: "Internal server error" });
+      }
     }
-  });
+  );
 
   // GET /auth/google — redirect to Google consent screen
   app.get("/google", async (_request, reply) => {
+    const state = crypto.randomBytes(32).toString("base64url");
+    setOauthStateCookie(reply, state);
+
     const params = new URLSearchParams({
       client_id: config.GOOGLE_CLIENT_ID,
       redirect_uri: config.GOOGLE_REDIRECT_URI,
@@ -118,18 +191,29 @@ export async function authRoutes(app: FastifyInstance) {
       scope: "openid email profile",
       access_type: "offline",
       prompt: "consent",
+      state,
     });
 
     return reply.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
   });
 
   // GET /auth/google/callback — handle Google OAuth callback
-  app.get("/google/callback", async (request, reply) => {
-    try {
-      const { code } = request.query as { code?: string };
+  app.get(
+    "/google/callback",
+    { config: { rateLimit: { max: 20, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      try {
+        const { code, state } = request.query as { code?: string; state?: string };
 
       if (!code) {
         return reply.redirect(`${config.FRONTEND_URL}/login?error=no_code`);
+      }
+
+      const expectedState = request.cookies[OAUTH_STATE_COOKIE];
+      clearOauthStateCookie(reply);
+      if (!state || !expectedState || !safeStateEquals(state, expectedState)) {
+        request.log.warn("OAuth state mismatch");
+        return reply.redirect(`${config.FRONTEND_URL}/login?error=invalid_state`);
       }
 
       // Exchange code for tokens
@@ -163,19 +247,20 @@ export async function authRoutes(app: FastifyInstance) {
       }
 
       const googleUser: GoogleUserInfo = await userInfoRes.json();
+      const normalizedEmail = googleUser.email.trim().toLowerCase();
 
       // Find or create user
       let [user] = await db
         .select()
         .from(users)
-        .where(eq(users.email, googleUser.email));
+        .where(eq(users.email, normalizedEmail));
 
       if (!user) {
         // Create new user from Google profile
         const result = await db
           .insert(users)
           .values({
-            email: googleUser.email,
+            email: normalizedEmail,
             name: googleUser.name,
             avatarUrl: googleUser.picture || randomAvatar(),
           })
@@ -198,13 +283,14 @@ export async function authRoutes(app: FastifyInstance) {
         .select({ onboardingCompleted: users.onboardingCompleted })
         .from(users)
         .where(eq(users.id, user.id));
-      const next = fresh?.onboardingCompleted ? "/vault" : "/onboarding";
-      return reply.redirect(`${config.FRONTEND_URL}${next}`);
-    } catch (error) {
-      request.log.error(error);
-      return reply.redirect(`${config.FRONTEND_URL}/login?error=server`);
+        const next = fresh?.onboardingCompleted ? "/vault" : "/onboarding";
+        return reply.redirect(`${config.FRONTEND_URL}${next}`);
+      } catch (error) {
+        request.log.error(error);
+        return reply.redirect(`${config.FRONTEND_URL}/login?error=server`);
+      }
     }
-  });
+  );
 
   // POST /auth/refresh — public (but requires refresh cookie)
   // Rotates the refresh token and issues new access + refresh cookies.
@@ -261,7 +347,7 @@ export async function authRoutes(app: FastifyInstance) {
       const [node] = await db
         .select({ id: nodes.id, title: nodes.title })
         .from(nodes)
-        .where(eq(nodes.id, user.resumeNodeId));
+        .where(and(eq(nodes.id, user.resumeNodeId), eq(nodes.userId, userId)));
       resumeNode = node || null;
     }
 
@@ -273,6 +359,24 @@ export async function authRoutes(app: FastifyInstance) {
     try {
       const { id: userId } = request.user;
       const input = updateProfileSchema.parse(request.body);
+
+      if (input.resumeNodeId) {
+        const [resumeNode] = await db
+          .select({ id: nodes.id })
+          .from(nodes)
+          .where(
+            and(
+              eq(nodes.id, input.resumeNodeId),
+              eq(nodes.userId, userId),
+              isNull(nodes.deletedAt)
+            )
+          );
+        if (!resumeNode) {
+          return reply.code(400).send({
+            error: "Resume node not found or inaccessible",
+          });
+        }
+      }
 
       const [user] = await db
         .update(users)

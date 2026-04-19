@@ -9,9 +9,14 @@ import {
   semanticSearch,
 } from "@repo/graph";
 import { generateEmbedding } from "@repo/ai/embeddings";
-import { updateNodeSchema, searchSchema } from "@repo/validators";
+import {
+  updateNodeSchema,
+  searchSchema,
+  memoryGraphQuerySchema,
+} from "@repo/validators";
 import { db } from "../../db";
 import { config } from "../../config";
+import { getMemoryGraph } from "../../services/memory-graph";
 
 export async function memoriesRoutes(app: FastifyInstance) {
   // All routes require auth
@@ -83,6 +88,31 @@ export async function memoriesRoutes(app: FastifyInstance) {
       }
       request.log.error(error);
       return reply.code(500).send({ error: "Search failed" });
+    }
+  });
+
+  // GET /memories/graph — memory nodes + relationship edges for visualization
+  app.get("/graph", async (request, reply) => {
+    try {
+      const { id: userId } = request.user;
+      const query = memoryGraphQuerySchema.parse(request.query ?? {});
+
+      const graph = await getMemoryGraph(db, userId, {
+        limit: query.limit,
+        edgeLimitPerNode: query.edgeLimitPerNode,
+        tag: query.tag,
+        from: query.from,
+        to: query.to,
+      });
+
+      return reply.send(graph);
+    } catch (error) {
+      if (error instanceof Error && error.name === "ZodError") {
+        return reply.code(400).send({ error: "Invalid query" });
+      }
+
+      request.log.error(error);
+      return reply.code(500).send({ error: "Failed to build graph" });
     }
   });
 
