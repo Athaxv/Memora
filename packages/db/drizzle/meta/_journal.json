@@ -15,6 +15,13 @@
       "when": 1774177506060,
       "tag": "0001_condemned_skreet",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776408382775,
+      "tag": "0002_workable_roughhouse",
+      "breakpoints": true
     }
   ]
 }
