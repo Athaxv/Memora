@@ -99,3 +99,34 @@
 - Updated Telegram webhook in [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts) to handle `/start <token>`, validate token hash/expiry, and auto-link the incoming Telegram `chat.id`.
 - Updated Telegram settings UI in [apps/frontend/app/components/settings/telegram-link.tsx](apps/frontend/app/components/settings/telegram-link.tsx) to remove manual chat ID entry and use one-click connect + pending polling.
 - Validation: `bun --filter @repo/db check-types`, `bun --filter backend check-types`, and `bun --filter frontend check-types` all passed; `bun db:push` applied schema changes successfully.
+
+## Implementation notes (2026-04-19, Memory Graph visualization)
+- Added graph query validation schema `memoryGraphQuerySchema` in [packages/validators/src/index.ts](packages/validators/src/index.ts) with limits, per-node edge cap, tag filter, and date range parsing.
+- Added graph assembly service in [apps/backend/src/services/memory-graph.ts](apps/backend/src/services/memory-graph.ts) that:
+	- loads recent memory nodes (user-scoped, excluding soft-deleted),
+	- reuses persisted semantic edges from `edges`,
+	- derives tag-overlap and temporal-proximity edges on the fly,
+	- ranks/merges edges and enforces per-node + global caps for readability.
+- Added authenticated endpoint `GET /memories/graph` in [apps/backend/src/routes/memories/index.ts](apps/backend/src/routes/memories/index.ts).
+- Added new dashboard page [apps/frontend/app/(dashboard)/memory-graph/page.tsx](apps/frontend/app/(dashboard)/memory-graph/page.tsx) with React Flow rendering, custom memory nodes, tag filtering, connected-node highlighting, and double-click navigation to memory detail.
+- Added sidebar navigation entry for Memory Graph in [apps/frontend/app/components/dashboard/sidebar.tsx](apps/frontend/app/components/dashboard/sidebar.tsx).
+
+## Implementation notes (2026-04-19, retrieval reliability fix)
+- Root cause diagnosed for repeated "no relevant memories" replies: embedding endpoint in [packages/ai/src/embeddings.ts](packages/ai/src/embeddings.ts) was pointing to a 404 route (`router ... /pipeline/feature-extraction/...`).
+- Updated embeddings model endpoint to Hugging Face router inference (`BAAI/bge-base-en-v1.5`) in [packages/ai/src/embeddings.ts](packages/ai/src/embeddings.ts), keeping 768-dim vectors compatible with `vector(768)` schema.
+- Added response-shape normalization in [packages/ai/src/embeddings.ts](packages/ai/src/embeddings.ts) to safely parse array/object payload variants from HF and avoid silent retrieval failure.
+- Added lexical fallback retrieval in [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts): when semantic search returns none (or query embedding is unavailable), fallback uses `listNodes(..., search: message)` so chat can still ground on stored memories.
+- Added backfill utility [apps/backend/src/scripts/backfill-embeddings.ts](apps/backend/src/scripts/backfill-embeddings.ts) and script command `backfill:embeddings` in [apps/backend/package.json](apps/backend/package.json) to regenerate missing embeddings for existing rows.
+- Executed backfill locally: `processed=4, updated=4, skipped=0`.
+
+## Implementation notes (2026-04-19, chat create/retrieve continuity)
+- Fixed web chat store-intent behavior in [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts):
+	- route now classifies intent before response generation,
+	- `store` intent now runs ingestion pipeline directly (same persistence model as Telegram webhook path),
+	- response returns persisted memory id/title so frontend can surface references.
+- Added short conversation history grounding in [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts):
+	- accepts prior turns and optional intent override,
+	- includes up to last 6 prior turns in LLM prompt to reduce turn-to-turn forgetfulness.
+- Fixed frontend conversation continuity in [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx):
+	- stores `conversationId` from first response,
+	- sends same `conversationId` on subsequent requests so backend can fetch prior turns.

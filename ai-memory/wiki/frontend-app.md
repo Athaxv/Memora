@@ -6,17 +6,21 @@ The primary UI is a Next.js app in apps/frontend that renders the dashboard, onb
 ## Detailed explanation
 - The app uses the App Router and a shared API wrapper that retries on 401 by refreshing the session.
 - Dashboard, vault, chat, onboarding, and auth routes live under the app directory structure.
+- Dashboard includes a Memory Graph page at `/memory-graph` that visualizes memory nodes and relationships from `GET /memories/graph`.
 - The UI does not define Next.js API routes; it relies on the Fastify backend for data and auth.
 
 ## Relationships
 - [ai-memory/wiki/api-layer.md](ai-memory/wiki/api-layer.md) - Frontend to backend contract.
 - [ai-memory/wiki/auth-system.md](ai-memory/wiki/auth-system.md) - Session and cookie behavior.
 - [ai-memory/wiki/architecture.md](ai-memory/wiki/architecture.md) - Runtime components.
+- [ai-memory/wiki/graph-layer.md](ai-memory/wiki/graph-layer.md) - Graph relationships and edge types visualized in the UI.
 
 ## Code references
 - [apps/frontend/app/layout.tsx](apps/frontend/app/layout.tsx)
 - [apps/frontend/app/page.tsx](apps/frontend/app/page.tsx)
 - [apps/frontend/app/(dashboard)](apps/frontend/app/(dashboard))
+- [apps/frontend/app/(dashboard)/memory-graph/page.tsx](apps/frontend/app/(dashboard)/memory-graph/page.tsx)
 - [apps/frontend/app/(auth)](apps/frontend/app/(auth))
 - [apps/frontend/app/(onboarding)](apps/frontend/app/(onboarding))
 - [apps/frontend/lib/api.ts](apps/frontend/lib/api.ts)
+- [apps/frontend/app/components/dashboard/sidebar.tsx](apps/frontend/app/components/dashboard/sidebar.tsx)
