@@ -11,6 +11,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   User,
+  Network,
 } from "lucide-react";
 import { logout } from "@/lib/api";
 
@@ -18,6 +19,7 @@ const STORAGE_KEY = "memory_os_sidebar_collapsed";
 
 const navItems = [
   { label: "Vault", href: "/vault", icon: Archive },
+  { label: "Memory Graph", href: "/memory-graph", icon: Network },
   { label: "Chat", href: "/chat", icon: MessageSquare },
   { label: "Profile", href: "/profile", icon: User },
   { label: "Settings", href: "/settings", icon: Settings },
@@ -54,7 +56,7 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        ${collapsed ? "w-[60px]" : "w-56"}
+        ${collapsed ? "w-15" : "w-56"}
         flex h-screen shrink-0 flex-col border-r border-[#fbbf9b]/25 bg-[#fef8f0]
         transition-all duration-300 ease-in-out
         ${mounted ? "opacity-100" : "opacity-0"}
@@ -145,10 +147,10 @@ export function Sidebar() {
               {/* Corner accents on active item */}
               {active && (
                 <>
-                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -left-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -right-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -left-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
                 </>
               )}
 

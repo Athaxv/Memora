@@ -30,6 +30,14 @@ export const searchSchema = z.object({
   type: z.string().optional(),
 });
 
+export const memoryGraphQuerySchema = z.object({
+  limit: z.coerce.number().int().min(10).max(100).optional(),
+  edgeLimitPerNode: z.coerce.number().int().min(1).max(5).optional(),
+  tag: z.string().trim().min(1).max(100).optional(),
+  from: z.coerce.date().optional(),
+  to: z.coerce.date().optional(),
+});
+
 export const socialLinksSchema = z.object({
   github: z.string().url().max(500).optional().or(z.literal("")),
   linkedin: z.string().url().max(500).optional().or(z.literal("")),

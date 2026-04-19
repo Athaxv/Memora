@@ -3,8 +3,8 @@ import { nodes, edges } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
 import type { Edge } from "./types";
 
-const SIMILARITY_THRESHOLD = 0.75;
-const MAX_EDGES_PER_NODE = 10;
+const SIMILARITY_THRESHOLD = 0.8;
+const MAX_EDGES_PER_NODE = 3;
 
 export async function computeSemanticEdges(
   db: Database,
