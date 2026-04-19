@@ -49,9 +49,9 @@ export default function DashboardLayout({
         rel="stylesheet"
         href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap"
       />
-      <div className="flex h-screen" style={{ fontFamily: "'Satoshi', sans-serif" }}>
+      <div className="flex h-screen bg-[#fef8f0]" style={{ fontFamily: "'Satoshi', sans-serif" }}>
         <Sidebar />
-        <main className="flex-1 min-w-0 overflow-auto">{children}</main>
+        <main className="flex-1 min-w-0 overflow-auto bg-[#fef8f0]">{children}</main>
       </div>
     </>
   );
