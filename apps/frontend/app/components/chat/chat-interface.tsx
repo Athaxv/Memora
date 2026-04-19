@@ -18,6 +18,7 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,12 +37,18 @@ export function ChatInterface() {
     try {
       const res = await api("/chat", {
         method: "POST",
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({
+          message: userMessage,
+          ...(conversationId ? { conversationId } : {}),
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
+        if (data.conversationId) {
+          setConversationId(data.conversationId);
+        }
         setMessages((prev) => [
           ...prev,
           {
@@ -84,8 +91,8 @@ export function ChatInterface() {
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
               </div>
-              <h3 className="mb-2 text-[1.25rem] font-bold text-[#111118] tracking-tight">
-                Chat with your memories
+              <h3 className="mb-2 text-[1.95rem] italic font-serif leading-[1.02] tracking-[-0.01em] text-[#111118] md:text-[2.35rem]">
+                Chat with yourself
               </h3>
               <p className="max-w-sm text-[13px] font-medium text-zinc-500 leading-relaxed">
                 Ask questions, search by meaning, or explore connections in your memory graph.
