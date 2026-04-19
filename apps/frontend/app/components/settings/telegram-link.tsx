@@ -7,7 +7,7 @@ type LinkState =
   | { step: "loading" }
   | { step: "not_linked" }
   | { step: "pending"; deepLink: string; expiresAt: string }
-  | { step: "verified"; chatId: string };
+  | { step: "verified"; chatId: string; botUrl: string | null };
 
 export function TelegramLink() {
   const [state, setState] = useState<LinkState>({ step: "loading" });
@@ -24,7 +24,7 @@ export function TelegramLink() {
         prev.step === "pending" ? prev : { step: "not_linked" }
       );
     } else if (data.verified) {
-      setState({ step: "verified", chatId: data.chatId });
+      setState({ step: "verified", chatId: data.chatId, botUrl: data.botUrl ?? null });
     } else {
       setState({ step: "not_linked" });
     }
@@ -159,16 +159,30 @@ export function TelegramLink() {
 
       {state.step === "verified" && (
         <div className="flex items-center justify-between">
-          <span className="text-[13px] text-zinc-600">
-            Linked: <span className="font-mono">{state.chatId}</span>
-          </span>
-          <button
-            onClick={handleUnlink}
-            disabled={submitting}
-            className="text-[12px] font-bold uppercase tracking-widest text-red-500 transition-colors hover:text-red-700 disabled:opacity-40"
-          >
-            {submitting ? "Disconnecting..." : "Disconnect"}
-          </button>
+          <div>
+            <span className="text-[13px] text-zinc-600">
+              Linked: <span className="font-mono">{state.chatId}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!state.botUrl) return;
+                window.open(state.botUrl, "_blank", "noopener,noreferrer");
+              }}
+              disabled={submitting || !state.botUrl}
+              className="border border-zinc-300 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-40"
+            >
+              Open Telegram
+            </button>
+            <button
+              onClick={handleUnlink}
+              disabled={submitting}
+              className="text-[12px] font-bold uppercase tracking-widest text-red-500 transition-colors hover:text-red-700 disabled:opacity-40"
+            >
+              {submitting ? "Disconnecting..." : "Disconnect"}
+            </button>
+          </div>
         </div>
       )}
     </div>

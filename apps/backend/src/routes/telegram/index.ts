@@ -27,6 +27,37 @@ function parseStartToken(text: string): string | null {
   return match?.[1] ?? null;
 }
 
+function looksLikeStoreRequest(message: string): boolean {
+  const text = message.toLowerCase();
+
+  const storeSignals = [
+    /\b(save|store|remember|note|log|record)\b/,
+    /\bcreate\b.*\bmemory\b/,
+    /\badd\b.*\bmemory\b/,
+  ];
+
+  const rejectSignals = [
+    /\b(do|did|have|has|can|could|would|will)\b.*\bremember\b/,
+    /\bwhat\b.*\bremember\b/,
+    /\brecall\b/,
+    /\blist\b.*\bmemories\b/,
+  ];
+
+  const hasStoreSignal = storeSignals.some((pattern) => pattern.test(text));
+  const hasRejectSignal = rejectSignals.some((pattern) => pattern.test(text));
+
+  return hasStoreSignal && !hasRejectSignal;
+}
+
+function isListMemoriesRequest(message: string): boolean {
+  const text = message.toLowerCase();
+  return (
+    /\b(list|show|display)\b/.test(text) &&
+    /\b(memory|memories)\b/.test(text) &&
+    (/\ball\b/.test(text) || /\bmy\b/.test(text) || /\bcurrent\b/.test(text))
+  );
+}
+
 let cachedBotUsername: string | null = null;
 
 async function getTelegramBotUsername(botToken: string): Promise<string | null> {
@@ -249,7 +280,9 @@ export async function telegramRoutes(app: FastifyInstance) {
 
       const intent = await classifyIntent(text, config.GROQ_API_KEY);
 
-      if (intent.intent === "store") {
+      const shouldStore = intent.intent === "store" || looksLikeStoreRequest(text);
+
+      if (shouldStore) {
         await ingest(
           {
             db,
@@ -268,6 +301,21 @@ export async function telegramRoutes(app: FastifyInstance) {
           "Saved to your memory graph!",
           getTelegramConfig()
         );
+        return;
+      }
+
+      if (isListMemoriesRequest(text)) {
+        const result = await processChat({
+          userId: link.userId,
+          message: text,
+          db,
+          groqApiKey: config.GROQ_API_KEY,
+          hfApiKey: config.HF_API_KEY,
+          intentOverride: "retrieve",
+          history: [],
+        });
+
+        await sendTelegramMessage(chatIdStr, result.reply, getTelegramConfig());
         return;
       }
 
@@ -298,10 +346,14 @@ export async function telegramRoutes(app: FastifyInstance) {
       return reply.send({ linked: false });
     }
 
+    const botToken = config.TELEGRAM_BOT_TOKEN;
+    const botUsername = botToken ? await getTelegramBotUsername(botToken) : null;
+
     return reply.send({
       linked: true,
       chatId: `****${link.chatId.slice(-4)}`,
       verified: link.verified,
+      botUrl: botUsername ? `https://t.me/${botUsername}` : null,
     });
   });
 
