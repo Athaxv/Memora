@@ -11,7 +11,6 @@ type LinkState =
 
 export function WhatsAppLink() {
   const [state, setState] = useState<LinkState>({ step: "loading" });
-  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -33,23 +32,6 @@ export function WhatsAppLink() {
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
-
-  async function handleLink() {
-    setError("");
-    setSubmitting(true);
-    const res = await api("/whatsapp/link", {
-      method: "POST",
-      body: JSON.stringify({ phoneNumber: phone.replace(/\D/g, "") }),
-    });
-    setSubmitting(false);
-
-    if (res.ok) {
-      setState({ step: "pending", phoneNumber: "****" + phone.slice(-4) });
-    } else {
-      const data = await res.json();
-      setError(data.error || "Failed to link WhatsApp");
-    }
-  }
 
   async function handleVerify() {
     setError("");
@@ -74,7 +56,6 @@ export function WhatsAppLink() {
     await api("/whatsapp/link", { method: "DELETE" });
     setSubmitting(false);
     setState({ step: "not_linked" });
-    setPhone("");
     setCode("");
   }
 
@@ -113,21 +94,21 @@ export function WhatsAppLink() {
 
       {/* Not linked */}
       {state.step === "not_linked" && (
-        <div className="flex gap-3">
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number (e.g. 15551234567)"
-            className="flex-1 border border-zinc-200 bg-[#fef8f0] px-4 py-2.5 text-[13px] text-zinc-900 placeholder:text-zinc-400 outline-none focus:border-[#fbbf9b] transition-colors"
-          />
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleLink}
-            disabled={submitting || phone.replace(/\D/g, "").length < 10}
+            onClick={() => {
+              window.open(
+                "https://mail.google.com/mail/?view=cm&fs=1&to=laatharv@gmail.com&su=Request%20for%20WhatsApp%20Integration%20-%20Memory%20OS&body=Hi%20Atharv%2C%0A%0AI%20want%20to%20request%20WhatsApp%20integration%20for%20our%20project.%0A%0AProject%20Name%3A%20Memory%20OS%0AUse%20Case%3A%20%5Bplease%20describe%5D%0AExpected%20Flow%3A%20%5Bplease%20describe%5D%0APriority%3A%20%5BLow%2FMedium%2FHigh%5D%0ATimeline%3A%20%5Bplease%20share%5D%0A%0AThanks%2C",
+                "_blank",
+                "noopener,noreferrer"
+              );
+            }}
+            disabled={submitting}
             className="bg-zinc-900 px-5 py-2.5 text-[12px] font-bold uppercase tracking-widest text-white hover:bg-zinc-800 disabled:opacity-40 transition-colors"
           >
-            {submitting ? "Sending..." : "Link"}
+            Contact us
           </button>
+          <span className="text-[12px] text-zinc-500">We will help you set up WhatsApp access.</span>
         </div>
       )}
 
