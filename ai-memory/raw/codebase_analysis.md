@@ -130,3 +130,12 @@
 - Fixed frontend conversation continuity in [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx):
 	- stores `conversationId` from first response,
 	- sends same `conversationId` on subsequent requests so backend can fetch prior turns.
+
+## Implementation notes (2026-04-20, Docker + Render backend deploy)
+- Added Docker deployment artifacts:
+	- [apps/backend/Dockerfile](apps/backend/Dockerfile) for Bun-based monorepo runtime build.
+	- [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh) to run DB migrations before API startup.
+	- [.dockerignore](.dockerignore) to reduce Docker build context and exclude local env/cache artifacts.
+	- [render.yaml](render.yaml) with Render Docker service blueprint using repo-root context and backend Dockerfile path.
+- Deployment startup flow now runs `db:migrate` from [packages/db/package.json](packages/db/package.json) and then starts backend from source with `tsx` to preserve current workspace package exports that target TypeScript source.
+- Added missing runtime dependency `fastify-raw-body` in [apps/backend/package.json](apps/backend/package.json) to match usage in [apps/backend/src/plugins/raw-body.ts](apps/backend/src/plugins/raw-body.ts).

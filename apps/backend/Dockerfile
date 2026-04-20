@@ -1,0 +1,14 @@
+FROM oven/bun:1.3.3-alpine
+
+WORKDIR /app
+
+# Copy monorepo source so workspace dependencies resolve correctly.
+COPY . .
+
+RUN bun install --frozen-lockfile
+RUN chmod +x apps/backend/scripts/start-render.sh
+
+ENV NODE_ENV=production
+EXPOSE 10000
+
+CMD ["sh", "apps/backend/scripts/start-render.sh"]

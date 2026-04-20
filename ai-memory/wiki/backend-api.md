@@ -15,6 +15,9 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, W
 - WhatsApp routes are registered; detail lives under the whatsapp route folder.
 - Telegram routes are registered; deep-link linking now starts at `/telegram/link/start` and completes via `/telegram/webhook` `/start <token>` handling.
 - Memory graph endpoint `GET /memories/graph` returns graph-ready `{ nodes, edges }` with persisted semantic edges plus derived tag and temporal edges.
+- Docker/Render deployment startup sequence is defined in [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh): run Drizzle migrations first, then start backend process.
+- Runtime Docker image definition is in [apps/backend/Dockerfile](apps/backend/Dockerfile), with Render service wiring in [render.yaml](render.yaml).
+- Health probing uses `/health` route in [apps/backend/src/index.ts](apps/backend/src/index.ts), which validates DB connectivity before returning `ok`.
 
 ## Relationships
 - [ai-memory/wiki/auth-system.md](ai-memory/wiki/auth-system.md) - Cookie auth and refresh tokens.
@@ -29,6 +32,7 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, W
 ## Code references
 - [apps/backend/src/index.ts](apps/backend/src/index.ts)
 - [apps/backend/src/plugins/rate-limit.ts](apps/backend/src/plugins/rate-limit.ts)
+- [apps/backend/src/plugins/raw-body.ts](apps/backend/src/plugins/raw-body.ts)
 - [apps/backend/src/routes/auth/index.ts](apps/backend/src/routes/auth/index.ts)
 - [apps/backend/src/routes/memories/index.ts](apps/backend/src/routes/memories/index.ts)
 - [apps/backend/src/routes/ingest/index.ts](apps/backend/src/routes/ingest/index.ts)
@@ -39,3 +43,6 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, W
 - [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts)
 - [apps/backend/src/routes/memories/index.ts](apps/backend/src/routes/memories/index.ts)
 - [apps/backend/src/services/memory-graph.ts](apps/backend/src/services/memory-graph.ts)
+- [apps/backend/Dockerfile](apps/backend/Dockerfile)
+- [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh)
+- [render.yaml](render.yaml)
