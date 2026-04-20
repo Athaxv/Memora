@@ -33,7 +33,7 @@ export function setAuthCookies(
   const base = {
     httpOnly: true,
     secure: isProd,
-    sameSite: "lax" as const,
+    sameSite: (isProd ? "none" : "lax") as const,
     domain: config.COOKIE_DOMAIN,
   };
 

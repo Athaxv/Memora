@@ -1,159 +1,227 @@
-# Turborepo starter
+# Personal Memory OS
 
-This Turborepo starter is maintained by the Turborepo core team.
+Personal Memory OS is an AI-powered memory platform that turns user inputs (notes, links, messages, documents, ideas, media) into a structured knowledge graph.
 
-## Using this example
+It is designed as a second brain: capture information quickly, connect it semantically, and retrieve it through natural language chat or graph exploration.
 
-Run the following command:
+## What this project does
 
-```sh
-npx create-turbo@latest
+- Ingests user content from UI and messaging channels.
+- Enriches memories with AI summaries, intent, tags, and embeddings.
+- Stores memory as a graph in Postgres (Neon) + pgvector.
+- Retrieves memories by semantic similarity and graph relationships.
+- Supports chat with conversation history and memory-aware responses.
+
+## Knowledge graph model
+
+The core data model is node-edge based.
+
+### Node types
+
+Nodes represent memory units. The current schema supports:
+
+- `link`
+- `note`
+- `document`
+- `message`
+- `idea`
+- `media`
+
+### Node shape
+
+Each node stores:
+
+- `id` (ULID for time-sortability)
+- `userId`
+- `type`
+- `title`
+- `content`
+- `summary`
+- `source` and `sourceUrl`
+- `metadata` (JSON)
+- `embedding` (`vector(768)`)
+- `createdAt`, `updatedAt`, optional `deletedAt`
+
+### Edge types
+
+Edges represent how two nodes are related:
+
+- `semantic`: meaning-level similarity
+- `temporal`: time proximity
+- `source`: common source channel
+- `tag`: shared tags/topics
+- `reference`: explicit references
+- `derived`: inferred/system-generated links
+
+Edge records include `weight`, `metadata`, and ownership by `userId`.
+
+### Tags and chat context
+
+- Tags are normalized in `tags` and connected through `node_tags`.
+- Chat sessions are stored in `conversations` and `messages`.
+- Chat writes both user and assistant turns and can reuse existing conversation IDs.
+
+## High-level architecture
+
+### Frontend
+
+- Next.js app (`apps/frontend`) for dashboard, memory interaction, and chat.
+
+### Backend
+
+- Fastify API (`apps/backend`) with auth, ingestion, memories, tags, chat, and webhook routes.
+- Cookie/JWT auth with refresh-token rotation.
+
+### Shared packages
+
+- `@repo/ai`: LLM calls (intent, summarization, tagging)
+- `@repo/ingestion`: ingestion orchestration
+- `@repo/graph`: graph CRUD/search/traversal helpers
+- `@repo/db`: Drizzle schema and DB client
+- `@repo/validators`: shared zod schemas
+
+### Data layer
+
+- Neon Postgres + pgvector for relational + semantic memory retrieval.
+
+## Ingestion and retrieval flow
+
+1. User submits content (text/link/file/message).
+2. Backend validates and normalizes payload.
+3. AI layer generates summary, tags, and embeddings.
+4. Graph layer creates node and related edges.
+5. Retrieval uses semantic search + graph traversal.
+6. Chat composes responses from relevant memory context.
+
+## Monorepo layout
+
+```txt
+apps/
+	frontend/        # Next.js primary product UI
+	backend/         # Fastify API
+	landing-page/    # marketing UI
+	docs/            # docs app
+	web/             # additional web app
+packages/
+	ai/
+	db/
+	graph/
+	ingestion/
+	validators/
+	ui/
+	eslint-config/
+	typescript-config/
 ```
 
-## What's inside?
+## Prerequisites
 
-This Turborepo includes the following packages/apps:
+- Bun `1.3.3` (workspace package manager)
+- Node `>=18` (engine compatibility)
+- Postgres with pgvector (Neon recommended)
 
-### Apps and Packages
+## Environment variables
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Backend requires:
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `GROQ_API_KEY`
 
-### Utilities
+Recommended for local dev:
 
-This Turborepo has some additional tools already setup for you:
+- `FRONTEND_URL` (default: `http://localhost:3000`)
+- `COOKIE_SECRET` (defaults to `JWT_SECRET` in local; must be different in production)
+- `HF_API_KEY` (optional, depending on embedding strategy)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+Production requirements:
 
-### Build
+- `COOKIE_SECRET` is mandatory and must differ from `JWT_SECRET`.
+- `FRONTEND_URL` is mandatory.
+- Bot-specific vars are required when `PRIMARY_BOT` enables WhatsApp and/or Telegram.
 
-To build all apps and packages, run the following command:
+## Local development
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Install dependencies from repo root:
 
-```sh
-cd my-turborepo
-turbo build
+```bash
+bun install
 ```
 
-Without global `turbo`, use your package manager:
+Run all apps/packages in dev mode:
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+bun run dev
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Run only backend:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+```bash
+bun --filter backend run dev
 ```
 
-Without global `turbo`:
+Run only frontend:
 
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+bun --filter frontend run dev
 ```
 
-### Develop
+Type-check everything:
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+bun run check-types
 ```
 
-Without global `turbo`, use your package manager:
+## Database commands
 
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+From repo root:
+
+```bash
+bun --filter @repo/db run db:generate
+bun --filter @repo/db run db:migrate
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Production backend runtime
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+The backend production path is compile-first:
 
-```sh
-turbo dev --filter=web
-```
+1. Build TypeScript to `dist/`
+2. Run compiled JavaScript (`dist/index.js`)
 
-Without global `turbo`:
+Package scripts:
 
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+- `start`: build then run compiled output
+- `start:prod`: run compiled output only
+- `start:deploy`: build then run prod start
 
-### Remote Caching
+This avoids runtime instability from direct TypeScript execution in production.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+## API surface overview
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Main route groups exposed by backend:
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- `/auth`
+- `/memories`
+- `/ingest`
+- `/tags`
+- `/chat`
+- `/whatsapp`
+- `/telegram`
+- `/memory/graph` (alias endpoint)
+- `/health`
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Documentation map
 
-```sh
-cd my-turborepo
-turbo login
-```
+Deep-dive docs are in `ai-memory/wiki`:
 
-Without global `turbo`, use your package manager:
+- `architecture.md`
+- `graph-layer.md`
+- `db-schema.md`
+- `backend-api.md`
+- `frontend-app.md`
+- `ingestion-pipeline.md`
+- `ai-layer.md`
+- `auth-system.md`
 
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+## Current status
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+This repository is an actively evolving implementation of the Personal Memory OS PRD. Core graph ingestion, semantic retrieval, and memory-aware chat are in place, with continued improvements across integrations and UX.
