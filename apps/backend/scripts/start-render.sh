@@ -2,7 +2,7 @@
 set -e
 
 # Apply database migrations before starting the API.
-bun run --cwd packages/db db:migrate
+npx drizzle-kit migrate --config packages/db/drizzle.config.ts
 
 # Run backend directly from source so workspace package TS exports keep working.
-exec bunx tsx apps/backend/src/index.ts
+exec npx tsx apps/backend/src/index.ts

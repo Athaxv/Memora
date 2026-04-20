@@ -2,6 +2,8 @@ FROM oven/bun:1.3.3-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache nodejs npm
+
 # Copy monorepo source so workspace dependencies resolve correctly.
 COPY . .
 
