@@ -153,3 +153,10 @@
 	- [packages/ai/src/auto-tag.ts](packages/ai/src/auto-tag.ts): `llama-3.1-8b-instant`
 	- [packages/ai/src/summarize.ts](packages/ai/src/summarize.ts): `llama-3.3-70b-versatile`
 - Also improved chat UI error surfacing in [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx) to show backend error detail instead of a generic fallback.
+
+## Implementation notes (2026-04-21, Render runtime hardening)
+- Confirmed `tsx` runtime startup under Bun in production is fragile (`Cannot find module './cjs/index.cjs'` from Bun when executing `tsx src/index.ts`).
+- Switched backend production path to compile then run JavaScript:
+	- [apps/backend/package.json](apps/backend/package.json): `start:prod` now runs `bun dist/index.js`; `start`/`start:deploy` now build first.
+	- [apps/backend/Dockerfile](apps/backend/Dockerfile): build step `bun run --cwd apps/backend build` is executed during image build.
+	- [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh): runtime-only startup with prebuilt dist artifact; no TypeScript runtime execution.

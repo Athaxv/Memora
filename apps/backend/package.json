@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "tsx src/index.ts",
-    "start:prod": "tsx src/index.ts",
-    "start:deploy": "npm run start:prod",
+    "start": "bun run build && bun dist/index.js",
+    "start:prod": "bun dist/index.js",
+    "start:deploy": "bun run build && bun run start:prod",
     "check-types": "tsc --noEmit",
     "backfill:embeddings": "tsx src/scripts/backfill-embeddings.ts"
   },

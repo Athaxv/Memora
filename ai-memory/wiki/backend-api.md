@@ -15,7 +15,8 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, W
 - WhatsApp routes are registered; detail lives under the whatsapp route folder.
 - Telegram routes are registered; deep-link linking now starts at `/telegram/link/start` and completes via `/telegram/webhook` `/start <token>` handling.
 - Memory graph endpoint `GET /memories/graph` returns graph-ready `{ nodes, edges }` with persisted semantic edges plus derived tag and temporal edges.
-- Docker/Render deployment startup sequence is defined in [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh): run Drizzle migrations first, then start backend process.
+- Docker/Render runtime startup is defined in [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh): start prebuilt backend process only.
+- Migration execution is separated into [apps/backend/scripts/migrate-render.sh](apps/backend/scripts/migrate-render.sh) for explicit CI/deploy-hook usage.
 - Runtime Docker image definition is in [apps/backend/Dockerfile](apps/backend/Dockerfile), with Render service wiring in [render.yaml](render.yaml).
 - Health probing uses `/health` route in [apps/backend/src/index.ts](apps/backend/src/index.ts), which validates DB connectivity before returning `ok`.
 

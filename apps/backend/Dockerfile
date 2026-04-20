@@ -6,6 +6,7 @@ WORKDIR /app
 COPY . .
 
 RUN bun install --frozen-lockfile
+RUN bun run --cwd apps/backend build
 RUN chmod +x apps/backend/scripts/start-render.sh
 RUN chmod +x apps/backend/scripts/migrate-render.sh
 
