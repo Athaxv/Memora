@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@repo/db": "*",
-    "drizzle-orm": "^0.39.0",
+    "drizzle-orm": "^0.45.2",
     "ulid": "^2.3.0",
     "zod": "^3.24.0"
   },

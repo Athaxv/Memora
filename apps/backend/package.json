@@ -25,7 +25,7 @@
     "@repo/validators": "*",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.0",
-    "drizzle-orm": "^0.39.3",
+    "drizzle-orm": "^0.45.2",
     "fastify": "^5.0.0",
     "fastify-raw-body": "^5.0.0",
     "openai": "^4.80.0",
