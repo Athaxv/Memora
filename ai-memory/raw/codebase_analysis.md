@@ -139,3 +139,9 @@
 	- [render.yaml](render.yaml) with Render Docker service blueprint using repo-root context and backend Dockerfile path.
 - Deployment startup flow now runs `db:migrate` from [packages/db/package.json](packages/db/package.json) and then starts backend from source with `tsx` to preserve current workspace package exports that target TypeScript source.
 - Added missing runtime dependency `fastify-raw-body` in [apps/backend/package.json](apps/backend/package.json) to match usage in [apps/backend/src/plugins/raw-body.ts](apps/backend/src/plugins/raw-body.ts).
+
+## Implementation notes (2026-04-20, runtime/migration separation)
+- Refactored startup script [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh) to runtime-only execution (`bun run --cwd apps/backend start:prod`) with no migration invocation.
+- Added migration-only script [apps/backend/scripts/migrate-render.sh](apps/backend/scripts/migrate-render.sh) so `drizzle.config.ts` is used strictly for CLI/migrations.
+- Simplified [apps/backend/Dockerfile](apps/backend/Dockerfile) by removing global npm CLI installs and relying on workspace-resolved Bun scripts.
+- Added explicit runtime-only note in [packages/db/src/client.ts](packages/db/src/client.ts) to prevent accidental drizzle-kit config coupling.
