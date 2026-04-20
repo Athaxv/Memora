@@ -30,10 +30,11 @@ export function setAuthCookies(
   refreshToken: string
 ) {
   const isProd = config.NODE_ENV === "production";
+  const sameSite = isProd ? ("none" as const) : ("lax" as const);
   const base = {
     httpOnly: true,
     secure: isProd,
-    sameSite: (isProd ? "none" : "lax") as const,
+    sameSite,
     domain: config.COOKIE_DOMAIN,
   };
 
