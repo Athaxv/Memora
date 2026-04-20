@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
   {
-    question: "What is Memory OS and how does it work?",
-    answer: "Memory OS is an AI-powered second brain that captures everything you choose to remember — links, notes, messages, PDFs — and organizes them into a semantic knowledge graph. Every item is auto-summarized, tagged, and connected to related memories using vector embeddings.",
+    question: "What is Memora and how does it work?",
+    answer: "Memora is an AI-powered second brain that captures everything you choose to remember — links, notes, messages, PDFs — and organizes them into a semantic knowledge graph. Every item is auto-summarized, tagged, and connected to related memories using vector embeddings.",
   },
   {
     question: "How is this different from Notion or a bookmarking app?",
-    answer: "Bookmarking apps store links. Notion requires manual organization. Memory OS does both automatically — it extracts content, generates summaries, applies AI tags, and builds connections between your memories without you lifting a finger. Think of it as a search engine for your own knowledge.",
+    answer: "Bookmarking apps store links. Notion requires manual organization. Memora does both automatically — it extracts content, generates summaries, applies AI tags, and builds connections between your memories without you lifting a finger. Think of it as a search engine for your own knowledge.",
   },
   {
     question: "Is my data private and secure?",
@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     question: "Can I export my data?",
-    answer: "Absolutely. Memory OS supports full data export in standard formats (JSON, Markdown). We also offer two-way sync with Notion and Obsidian. Your knowledge belongs to you — we never lock it in.",
+    answer: "Absolutely. Memora supports full data export in standard formats (JSON, Markdown). We also offer two-way sync with Notion and Obsidian. Your knowledge belongs to you — we never lock it in.",
   },
 ];
 

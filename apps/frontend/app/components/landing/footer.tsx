@@ -34,7 +34,7 @@ export function Footer() {
                 <path d="M10 17v4" />
                 <path d="M14 17v4" />
               </svg>
-              <span className="font-bold tracking-tighter text-zinc-900 text-lg">Memory OS</span>
+              <span className="font-bold tracking-tighter text-zinc-900 text-lg">Memora</span>
             </Link>
             <p className="text-[12px] font-medium text-zinc-500 mt-1">
               Your AI-powered second brain.
@@ -74,7 +74,7 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-24 flex flex-col md:flex-row items-center justify-center gap-6 text-[11px] font-bold text-zinc-500">
-            <span>&copy; {new Date().getFullYear()} Memory OS, Inc.</span>
+            <span>&copy; {new Date().getFullYear()} Memora, Inc.</span>
           <Link href="#" className="hover:text-zinc-900 transition-colors">Privacy policy</Link>
           <Link href="#" className="hover:text-zinc-900 transition-colors">Terms &amp; conditions</Link>
         </div>

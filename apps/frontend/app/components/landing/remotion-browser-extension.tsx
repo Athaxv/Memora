@@ -17,7 +17,7 @@ export const BrowserExtensionVisual = () => {
   // Save button appears
   const saveProgress = spring({ frame: Math.max(0, loopFrame - 45), fps, config: { damping: 12, mass: 0.6 } });
 
-  // Flow to Memory OS
+  // Flow to Memora
   const flowOffset = -(Math.max(0, loopFrame - 60) * 2) % 110;
   const flowOpacity = loopFrame > 55 ? 1 : 0;
 
@@ -62,7 +62,7 @@ export const BrowserExtensionVisual = () => {
           </div>
         </div>
 
-        {/* Memory OS target node */}
+        {/* Memora target node */}
         <div className="absolute left-[50%] bottom-[8%] -translate-x-1/2 z-20">
           <div className="bg-zinc-900 text-white font-black tracking-tighter px-2.5 py-1 rounded shadow-lg text-[10px] flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />

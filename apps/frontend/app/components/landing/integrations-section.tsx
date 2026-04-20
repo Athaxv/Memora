@@ -22,7 +22,7 @@ const playerConfig = {
 const integrations: { title: string; description: string; component: ComponentType }[] = [
   {
     title: "Built for your workflow",
-    description: "Memory OS connects to the apps you already use. Forward messages, save links, and sync documents without changing your habits.",
+    description: "Memora connects to the apps you already use. Forward messages, save links, and sync documents without changing your habits.",
     component: IntegrationsFlowVisual,
   },
   {

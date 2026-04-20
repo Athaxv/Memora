@@ -20,9 +20,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Memory OS — Your AI-Powered Second Brain",
+  title: "Memora — Your AI-Powered Second Brain",
   description:
-    "Capture anything. Understand everything. Memory OS uses AI to build your personal knowledge graph — so you never lose a thought again.",
+    "Capture anything. Understand everything. Memora uses AI to build your personal knowledge graph — so you never lose a thought again.",
 };
 
 export default function RootLayout({

@@ -115,7 +115,7 @@ export function Navbar() {
                 <path d="M8 6l2 2" />
                 <path d="M16 6l-2 2" />
               </svg>
-              <span className="tracking-tight">Memory OS</span>
+              <span className="tracking-tight">Memora</span>
             </div>
           </Link>
 

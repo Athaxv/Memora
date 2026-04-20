@@ -46,7 +46,7 @@ export function LovedByTeamsSection() {
       company: "WRITER",
       author: "Sarah T.",
       role: "Author",
-      quote: "I used to lose an article a day. Now my memory OS just remembers it all for me and resurfaces exactly what I need."
+      quote: "I used to lose an article a day. Now my Memora just remembers it all for me and resurfaces exactly what I need."
     },
     {
       company: "FOUNDER",
@@ -84,7 +84,7 @@ export function LovedByTeamsSection() {
             <span className="font-sans font-[700] tracking-tight text-[#111118]">by people who<br/>remember everything</span>
           </h2>
           <p className="mt-6 text-[1.1rem] text-zinc-600 max-w-[440px] mx-auto font-medium">
-            Memory OS helps individuals and teams organize their knowledge effortlessly.
+            Memora helps individuals and teams organize their knowledge effortlessly.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export function LovedByTeamsSection() {
                 <div className="text-[13px] font-medium text-zinc-500">Average user rating</div>
               </div>
 
-              <h3 className="font-bold text-xl text-zinc-900 mb-2 tracking-tight">People love Memory OS</h3>
+              <h3 className="font-bold text-xl text-zinc-900 mb-2 tracking-tight">People love Memora</h3>
               <p className="text-[12px] text-zinc-600 font-medium">
                 Join thousands building their second brain. <Link href="/signup" className="text-zinc-900 underline underline-offset-2 decoration-[#fbbf9b] hover:text-[#d97706] transition-colors whitespace-nowrap">Get started free &rarr;</Link>
               </p>
@@ -165,7 +165,7 @@ export function LovedByTeamsSection() {
                 <div className="relative">
                   <span className="absolute -left-6 top-1 text-2xl text-zinc-300 font-serif leading-none">&ldquo;</span>
                   <p className="text-[1.125rem] md:text-[1.3rem] text-zinc-800 leading-relaxed font-medium tracking-tight">
-                    Memory OS changed how I think about information. Instead of organizing files into folders, I just capture everything and the AI connects the dots. It&rsquo;s like having a research assistant that never forgets.
+                    Memora changed how I think about information. Instead of organizing files into folders, I just capture everything and the AI connects the dots. It&rsquo;s like having a research assistant that never forgets.
                   </p>
                 </div>
               </div>

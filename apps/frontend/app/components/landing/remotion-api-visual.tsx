@@ -75,7 +75,7 @@ export const ApiVisual = () => {
           )}
         </svg>
 
-        {/* Bottom Memory OS badge */}
+        {/* Bottom Memora badge */}
         <div className="absolute bottom-[6%] left-[50%] -translate-x-1/2 z-20" style={{ opacity: responseProgress, transform: `translateX(-50%) scale(${interpolate(responseProgress, [0, 1], [0.8, 1])})` }}>
           <div className="bg-zinc-900 text-white font-black tracking-tighter px-2.5 py-1 rounded shadow-lg text-[9px] flex items-center gap-1">
             <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />

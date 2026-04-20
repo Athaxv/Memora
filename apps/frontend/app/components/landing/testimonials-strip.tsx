@@ -4,7 +4,7 @@ const testimonials = [
     companyIcon: "🔬",
     quote: (
       <>
-        &ldquo;I saved over 200 papers last semester and Memory OS automatically mapped the connections between them.{" "}
+        &ldquo;I saved over 200 papers last semester and Memora automatically mapped the connections between them.{" "}
         <strong>My literature review practically wrote itself.</strong>&rdquo;
       </>
     ),

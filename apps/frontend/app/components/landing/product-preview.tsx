@@ -42,7 +42,7 @@ export function ProductPreview() {
 
           <div className="mt-14 border-t border-dashed border-zinc-200/80 pt-8">
             <p className="font-serif italic text-zinc-600 leading-[1.5] text-[1.15rem]">
-              "I used to lose 50 links a week. Now my Memory OS resurfaces exactly what I need, right when I need it."
+              "I used to lose 50 links a week. Now my Memora resurfaces exactly what I need, right when I need it."
             </p>
             <div className="mt-5 flex items-center gap-3">
                <div className="flex items-center gap-1 text-[15px]">

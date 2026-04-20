@@ -7,7 +7,7 @@ export function WelcomeStep({ onNext }: { onNext: () => void }) {
       <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
       <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
-        Welcome to Memory OS
+        Welcome to Memora
       </h1>
       <p className="mt-2 mb-10 text-[14px] text-zinc-500 font-medium">
         Your safe place for links, ideas, and knowledge. AI-powered from day one.

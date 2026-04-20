@@ -49,7 +49,7 @@ export default function LoginPage() {
         Welcome back
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">
-        Sign in to your Memory OS
+        Sign in to your Memora
       </p>
 
       <button

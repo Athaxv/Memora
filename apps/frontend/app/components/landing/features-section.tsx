@@ -45,7 +45,7 @@ export function FeaturesSection() {
 
              <div className="mt-16 pt-8 border-t border-dashed border-zinc-200">
                 <p className="text-[0.95rem] italic font-serif leading-[1.6] text-zinc-600">
-                  "I used to lose 50 links a week because my bookmarks were a mess. Now my memory OS just remembers everything for me—and instantly fetches it when I ask."
+                  "I used to lose 50 links a week because my bookmarks were a mess. Now my Memora just remembers everything for me—and instantly fetches it when I ask."
                 </p>
                 <div className="mt-4 flex items-center gap-3">
                   <span className="font-bold text-[14px] tracking-tight">STARTUP FOUNDER</span>
