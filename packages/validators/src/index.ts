@@ -57,6 +57,19 @@ export const chatSchema = z.object({
   message: z.string().min(1).max(5000),
 });
 
+export const chatSessionsQuerySchema = z.object({
+  cursor: z.coerce.date().optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
+export const chatSessionMessagesQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).optional(),
+});
+
+export const chatSessionParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export const whatsappLinkSchema = z.object({
   phoneNumber: z.string().regex(/^\d{10,15}$/, "Phone number must be 10-15 digits"),
 });

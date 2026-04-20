@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Archive,
@@ -12,8 +12,9 @@ import {
   PanelLeft,
   User,
   Network,
+  Trash2,
 } from "lucide-react";
-import { logout } from "@/lib/api";
+import { api, logout } from "@/lib/api";
 
 const STORAGE_KEY = "memory_os_sidebar_collapsed";
 
@@ -27,14 +28,77 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeSessionId = searchParams.get("sessionId");
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [recentChats, setRecentChats] = useState<
+    Array<{
+      id: string;
+      title: string | null;
+      preview: string | null;
+      updatedAt: string;
+    }>
+  >([]);
+  const [chatCursor, setChatCursor] = useState<string | null>(null);
+  const [chatHasMore, setChatHasMore] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "true") setCollapsed(true);
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    void loadRecentChats(true);
+  }, []);
+
+  async function loadRecentChats(reset = false) {
+    if (chatLoading) return;
+    if (!reset && !chatHasMore) return;
+
+    setChatLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "10");
+      if (!reset && chatCursor) {
+        params.set("cursor", chatCursor);
+      }
+
+      const res = await api(`/chat/sessions?${params.toString()}`);
+      const data = await res.json();
+      if (!res.ok) return;
+
+      const incoming = data.sessions ?? [];
+      setRecentChats((prev) => {
+        if (reset) return incoming;
+
+        const deduped = new Map(prev.map((chat) => [chat.id, chat]));
+        for (const chat of incoming) deduped.set(chat.id, chat);
+        return Array.from(deduped.values());
+      });
+
+      setChatCursor(data.nextCursor ?? null);
+      setChatHasMore(Boolean(data.hasMore));
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function handleDeleteChat(chatId: string) {
+    if (deletingChatId) return;
+
+    setDeletingChatId(chatId);
+    try {
+      const res = await api(`/chat/sessions/${chatId}`, { method: "DELETE" });
+      if (!res.ok) return;
+      setRecentChats((prev) => prev.filter((chat) => chat.id !== chatId));
+    } finally {
+      setDeletingChatId(null);
+    }
+  }
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -122,8 +186,50 @@ export function Sidebar() {
       {/* Divider */}
       <div className="border-t border-[#fbbf9b]/25" />
 
+      {/* Primary action */}
+      <div className="px-2 pt-3">
+        <Link
+          href="/chat"
+          className={`
+            group relative flex items-center gap-3 rounded-sm px-3 py-2.5
+            text-white transition-all duration-150
+            hover:bg-zinc-800
+            ${collapsed ? "mx-auto h-10 w-10 justify-center gap-0 px-0 py-0" : ""}
+          `}
+          title={collapsed ? "Start new chat" : undefined}
+        >
+          <span className="absolute inset-0 border border-zinc-900 bg-zinc-900 transition-colors group-hover:bg-zinc-800" />
+          <span className="absolute -left-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <span className="absolute -right-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <span className="absolute -left-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <span className="absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <svg
+            className="relative z-10 shrink-0"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span
+            className={`
+              relative z-10 text-[13px] font-bold whitespace-nowrap overflow-hidden
+              transition-all duration-300
+              ${collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"}
+            `}
+          >
+            Start new chat
+          </span>
+        </Link>
+      </div>
+
       {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1 px-2 pt-3">
+      <nav className="flex flex-col gap-1 px-2 pt-3">
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -141,7 +247,7 @@ export function Sidebar() {
                     ? "bg-white border border-[#fbbf9b]/40 text-[#111118] font-semibold"
                     : "text-zinc-500 hover:bg-[#fef2e4]/60 hover:text-[#d97706] border border-transparent"
                 }
-                ${collapsed ? "justify-center px-2" : "px-3"}
+                ${collapsed ? "mx-auto h-10 w-10 justify-center gap-0 px-0 py-0" : "px-3"}
               `}
             >
               {/* Corner accents on active item */}
@@ -169,8 +275,67 @@ export function Sidebar() {
         })}
       </nav>
 
+      {!collapsed && (
+        <div className="relative flex h-full min-h-0 flex-1 flex-col border-t border-[#fbbf9b]/25 px-2 pt-3 overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-2 top-0 h-6 bg-linear-to-b from-[#fef8f0] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-2 bottom-0 h-6 bg-linear-to-t from-[#fef8f0] to-transparent" />
+
+          <div className="px-3 pb-2">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+              Recents
+            </p>
+          </div>
+
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1 pb-2 scroll-smooth overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgba(251,191,153,0.55)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-[#fef8f0] [&::-webkit-scrollbar-thumb]:bg-[#fbbf9b]/50 hover:[&::-webkit-scrollbar-thumb]:bg-[#d97706]/70">
+            {recentChats.map((chat) => {
+              const isActive = pathname === "/chat" && activeSessionId === chat.id;
+
+              return (
+                <div
+                  key={chat.id}
+                  className={`group flex items-center gap-2 rounded-sm border px-2 py-2 transition-colors ${
+                    isActive
+                      ? "border-[#fbbf9b]/70 bg-white"
+                      : "border-transparent hover:border-[#fbbf9b]/35 hover:bg-[#fef2e4]/50"
+                  }`}
+                >
+                  <Link href={`/chat?sessionId=${chat.id}`} className="min-w-0 flex-1">
+                    <p className="line-clamp-1 text-[13px] font-medium leading-5 text-zinc-900">
+                      {chat.title || "Untitled chat"}
+                    </p>
+                  </Link>
+
+                  <button
+                    onClick={() => void handleDeleteChat(chat.id)}
+                    disabled={deletingChatId === chat.id}
+                    className="shrink-0 text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-zinc-800 disabled:opacity-50"
+                    title="Delete chat"
+                  >
+                    <Trash2 size={13} strokeWidth={1.6} />
+                  </button>
+                </div>
+              );
+            })}
+
+            {recentChats.length === 0 && !chatLoading && (
+              <p className="px-2 text-[12px] text-zinc-400">No recent chats</p>
+            )}
+
+            {(chatHasMore || chatLoading) && (
+              <button
+                onClick={() => void loadRecentChats(false)}
+                disabled={chatLoading}
+                className="w-full rounded-sm border border-[#fbbf9b]/30 bg-white px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:border-[#fbbf9b]/60 disabled:opacity-50"
+              >
+                {chatLoading ? "Loading..." : "Load more"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="border-t border-[#fbbf9b]/25 px-2 py-3">
+      <div className="relative z-10 border-t border-[#fbbf9b]/25 bg-[#fef8f0] px-2 py-3">
         <button
           onClick={handleSignOut}
           title={collapsed ? "Sign out" : undefined}

@@ -35,7 +35,7 @@ export async function classifyIntent(
   const client = getClient(apiKey);
 
   const response = await client.chat.completions.create({
-    model: "chatgpt-4o-latest",
+    model: "llama-3.1-8b-instant",
     max_tokens: 200,
     messages: [
       {

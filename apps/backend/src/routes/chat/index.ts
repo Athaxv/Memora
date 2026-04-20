@@ -1,9 +1,14 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt } from "drizzle-orm";
 import { classifyIntent } from "@repo/ai/intent";
 import { conversations, messages } from "@repo/db/schema";
 import { ingest } from "@repo/ingestion";
-import { chatSchema } from "@repo/validators";
+import {
+  chatSchema,
+  chatSessionMessagesQuerySchema,
+  chatSessionParamsSchema,
+  chatSessionsQuerySchema,
+} from "@repo/validators";
 import { processChat } from "../../services/chat";
 import { db } from "../../db";
 import { config } from "../../config";
@@ -32,6 +37,151 @@ function looksLikeStoreRequest(message: string): boolean {
 
 export async function chatRoutes(app: FastifyInstance) {
   app.addHook("preHandler", app.authenticate);
+
+  // GET /chat/sessions — paginated conversation list for sidebar
+  app.get("/sessions", async (request, reply) => {
+    try {
+      const { id: userId } = request.user;
+      const query = chatSessionsQuerySchema.parse(request.query ?? {});
+      const limit = query.limit ?? 20;
+
+      const sessionRows = await db
+        .select({
+          id: conversations.id,
+          title: conversations.title,
+          createdAt: conversations.createdAt,
+          updatedAt: conversations.updatedAt,
+        })
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.userId, userId),
+            query.cursor ? lt(conversations.updatedAt, query.cursor) : undefined
+          )
+        )
+        .orderBy(desc(conversations.updatedAt))
+        .limit(limit + 1);
+
+      const hasMore = sessionRows.length > limit;
+      const sessions = hasMore ? sessionRows.slice(0, limit) : sessionRows;
+      const nextCursor =
+        hasMore && sessions.at(-1)?.updatedAt
+          ? sessions.at(-1)?.updatedAt.toISOString()
+          : null;
+
+      const sessionIds = sessions.map((session) => session.id);
+      const latestMessageByConversation = new Map<string, string>();
+
+      if (sessionIds.length > 0) {
+        const latestMessages = await db
+          .select({
+            conversationId: messages.conversationId,
+            content: messages.content,
+            createdAt: messages.createdAt,
+          })
+          .from(messages)
+          .where(inArray(messages.conversationId, sessionIds))
+          .orderBy(desc(messages.createdAt));
+
+        for (const message of latestMessages) {
+          if (!latestMessageByConversation.has(message.conversationId)) {
+            latestMessageByConversation.set(message.conversationId, message.content);
+          }
+        }
+      }
+
+      return reply.send({
+        sessions: sessions.map((session) => ({
+          id: session.id,
+          title: session.title,
+          createdAt: session.createdAt,
+          updatedAt: session.updatedAt,
+          preview: latestMessageByConversation.get(session.id) ?? null,
+        })),
+        nextCursor,
+        hasMore,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "ZodError") {
+        return reply.code(400).send({ error: "Invalid query" });
+      }
+      request.log.error(error);
+      return reply.code(500).send({ error: "Failed to load chat sessions" });
+    }
+  });
+
+  // GET /chat/sessions/:id/messages — load conversation history
+  app.get("/sessions/:id/messages", async (request, reply) => {
+    try {
+      const { id: userId } = request.user;
+      const { id } = chatSessionParamsSchema.parse(request.params ?? {});
+      const query = chatSessionMessagesQuerySchema.parse(request.query ?? {});
+      const limit = query.limit ?? 200;
+
+      const [conversation] = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(and(eq(conversations.id, id), eq(conversations.userId, userId)));
+
+      if (!conversation) {
+        return reply.code(404).send({ error: "Conversation not found" });
+      }
+
+      const rows = await db
+        .select({
+          id: messages.id,
+          role: messages.role,
+          content: messages.content,
+          metadata: messages.metadata,
+          createdAt: messages.createdAt,
+        })
+        .from(messages)
+        .where(eq(messages.conversationId, id))
+        .orderBy(asc(messages.createdAt))
+        .limit(limit);
+
+      return reply.send({
+        messages: rows.map((row) => ({
+          id: row.id,
+          role: row.role,
+          content: row.content,
+          metadata: row.metadata,
+          createdAt: row.createdAt,
+        })),
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "ZodError") {
+        return reply.code(400).send({ error: "Invalid request" });
+      }
+      request.log.error(error);
+      return reply.code(500).send({ error: "Failed to load conversation" });
+    }
+  });
+
+  // DELETE /chat/sessions/:id — delete conversation and all messages
+  app.delete("/sessions/:id", async (request, reply) => {
+    try {
+      const { id: userId } = request.user;
+      const { id } = chatSessionParamsSchema.parse(request.params ?? {});
+
+      const [deleted] = await db
+        .delete(conversations)
+        .where(and(eq(conversations.id, id), eq(conversations.userId, userId)))
+        .returning({ id: conversations.id });
+
+      if (!deleted) {
+        return reply.code(404).send({ error: "Conversation not found" });
+      }
+
+      return reply.send({ success: true });
+    } catch (error) {
+      if (error instanceof Error && error.name === "ZodError") {
+        return reply.code(400).send({ error: "Invalid request" });
+      }
+      request.log.error(error);
+      return reply.code(500).send({ error: "Failed to delete conversation" });
+    }
+  });
 
   // POST /chat — AI chat with memory context
   app.post("/", async (request, reply) => {

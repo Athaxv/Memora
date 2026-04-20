@@ -145,3 +145,11 @@
 - Added migration-only script [apps/backend/scripts/migrate-render.sh](apps/backend/scripts/migrate-render.sh) so `drizzle.config.ts` is used strictly for CLI/migrations.
 - Simplified [apps/backend/Dockerfile](apps/backend/Dockerfile) by removing global npm CLI installs and relying on workspace-resolved Bun scripts.
 - Added explicit runtime-only note in [packages/db/src/client.ts](packages/db/src/client.ts) to prevent accidental drizzle-kit config coupling.
+
+## Implementation notes (2026-04-21, Groq model-not-found hotfix)
+- Root cause for repeated chat fallback `Sorry, something went wrong.` was invalid model IDs being sent to Groq (`chatgpt-4o-latest` and `codex-mini-latest`) from shared AI package modules.
+- Updated model IDs to Groq-supported options:
+	- [packages/ai/src/intent.ts](packages/ai/src/intent.ts): `llama-3.1-8b-instant`
+	- [packages/ai/src/auto-tag.ts](packages/ai/src/auto-tag.ts): `llama-3.1-8b-instant`
+	- [packages/ai/src/summarize.ts](packages/ai/src/summarize.ts): `llama-3.3-70b-versatile`
+- Also improved chat UI error surfacing in [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx) to show backend error detail instead of a generic fallback.

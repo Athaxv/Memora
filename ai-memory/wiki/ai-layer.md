@@ -9,6 +9,7 @@ AI utilities provide summarization, auto-tagging, intent classification, and emb
 - Intent classification maps user messages to store/retrieve/summarize/connect/ask/manage.
 - Embeddings use Hugging Face Router inference (`BAAI/bge-base-en-v1.5`) and are optional; if no HF key is configured, embeddings are skipped to keep ingestion functional.
 - Chat retrieval now includes a lexical fallback in [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts): if semantic retrieval yields no results (or query embedding fails), it runs text search over nodes to reduce false "no memory" replies.
+- Groq calls require Groq-supported model IDs. OpenAI-specific model IDs (for example `chatgpt-4o-latest` or `codex-mini-latest`) result in `model_not_found` responses and can surface as `/chat` failures.
 
 ## Relationships
 - [ai-memory/wiki/ingestion-pipeline.md](ai-memory/wiki/ingestion-pipeline.md) - Calls summarize, embed, and auto-tag.
@@ -22,3 +23,4 @@ AI utilities provide summarization, auto-tagging, intent classification, and emb
 - [packages/ai/src/embeddings.ts](packages/ai/src/embeddings.ts)
 - [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts)
 - [packages/ai/src/index.ts](packages/ai/src/index.ts)
+- [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx)
