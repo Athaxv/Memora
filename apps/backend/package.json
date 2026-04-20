@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "prestart": "npm run build",
     "start": "node dist/index.js",
+    "start:prod": "node dist/index.js",
+    "start:deploy": "npm run build && npm run start:prod",
     "check-types": "tsc --noEmit",
     "backfill:embeddings": "tsx src/scripts/backfill-embeddings.ts"
   },
