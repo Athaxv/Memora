@@ -20,7 +20,7 @@ export async function summarize(
   const client = getClient(apiKey);
 
   const response = await client.chat.completions.create({
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: "codex-mini-latest",
     max_tokens: 300,
     messages: [
       {

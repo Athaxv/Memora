@@ -29,7 +29,7 @@ export async function autoTag(
   const client = getClient(apiKey);
 
   const response = await client.chat.completions.create({
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: "chatgpt-4o-latest",
     max_tokens: 300,
     messages: [
       {
