@@ -296,7 +296,10 @@ export async function authRoutes(app: FastifyInstance) {
   // Rotates the refresh token and issues new access + refresh cookies.
   // If the presented token was already rotated (reuse detection), revokes
   // the entire family.
-  app.post("/refresh", async (request, reply) => {
+  app.post(
+    "/refresh",
+    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    async (request, reply) => {
     const raw = request.cookies.refresh_token;
     if (!raw) {
       return reply.code(401).send({ error: "No refresh token" });
@@ -307,19 +310,24 @@ export async function authRoutes(app: FastifyInstance) {
       clearAuthCookies(reply);
       return reply.code(401).send({ error: result.reason });
     }
-    return reply.send({ ok: true });
-  });
+      return reply.send({ ok: true });
+    }
+  );
 
   // POST /auth/logout — public and idempotent
   // Revokes the entire refresh token family and clears cookies.
-  app.post("/logout", async (request, reply) => {
+  app.post(
+    "/logout",
+    { config: { rateLimit: { max: 30, timeWindow: "1 minute" } } },
+    async (request, reply) => {
     const raw = request.cookies.refresh_token;
     if (raw) {
       await revokeFamily(raw);
     }
     clearAuthCookies(reply);
-    return reply.send({ ok: true });
-  });
+      return reply.send({ ok: true });
+    }
+  );
 
   // GET /auth/me — authenticated
   app.get("/me", { preHandler: [app.authenticate] }, async (request, reply) => {

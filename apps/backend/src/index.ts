@@ -1,11 +1,13 @@
 import Fastify from "fastify";
 import { memoryGraphQuerySchema } from "@repo/validators";
+import { sql } from "drizzle-orm";
 import { config } from "./config";
 import { db } from "./db";
 import { registerCors } from "./plugins/cors";
 import { registerCookies } from "./plugins/cookies";
 import { registerAuth } from "./plugins/auth";
 import { registerMultipart } from "./plugins/multipart";
+import { registerRawBody } from "./plugins/raw-body";
 import { registerRateLimit } from "./plugins/rate-limit";
 import { authRoutes } from "./routes/auth/index";
 import { memoriesRoutes } from "./routes/memories/index";
@@ -24,6 +26,7 @@ async function main() {
   await registerCookies(app);
   await registerAuth(app);
   await registerMultipart(app);
+  await registerRawBody(app);
   await registerRateLimit(app);
 
   // Routes
@@ -64,7 +67,15 @@ async function main() {
   );
 
   // Health check
-  app.get("/health", async () => ({ status: "ok" }));
+  app.get("/health", async (request, reply) => {
+    try {
+      await db.execute(sql`select 1`);
+      return reply.send({ status: "ok" });
+    } catch (error) {
+      request.log.error(error, "Health check failed");
+      return reply.code(503).send({ status: "degraded" });
+    }
+  });
 
   // Start
   try {

@@ -57,12 +57,11 @@ export async function sendWhatsAppMessage(
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("WhatsApp send failed:", response.status, error);
-      console.error("WhatsApp send details:", { to, phoneNumberId: config.phoneNumberId });
-    } else {
-      console.log("WhatsApp message sent to:", to);
+      throw new Error(
+        `WhatsApp send failed (${response.status}) for ${to}: ${error}`
+      );
     }
   } catch (error) {
-    console.error("WhatsApp send error:", error);
+    throw error;
   }
 }

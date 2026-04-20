@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import { whatsappLinks } from "@repo/db/schema";
 import { whatsappLinkSchema, whatsappVerifySchema } from "@repo/validators";
@@ -20,11 +21,39 @@ function getWhatsAppConfig() {
   };
 }
 
+function verifyWhatsAppSignature(
+  rawBody: Buffer,
+  signatureHeader: string | undefined,
+  appSecret: string
+): boolean {
+  if (!signatureHeader || !signatureHeader.startsWith("sha256=")) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", appSecret)
+    .update(rawBody)
+    .digest("hex");
+
+  const received = signatureHeader.slice("sha256=".length);
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const receivedBuf = Buffer.from(received, "utf8");
+
+  if (expectedBuf.length !== receivedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuf, receivedBuf);
+}
+
 export async function whatsappRoutes(app: FastifyInstance) {
   // ── Webhook endpoints (NO auth — Meta calls these directly) ──
 
   // GET /whatsapp/webhook — Meta verification
-  app.get("/webhook", async (request, reply) => {
+  app.get(
+    "/webhook",
+    { config: { rateLimit: { max: 60, timeWindow: "1 minute" } } },
+    async (request, reply) => {
     const query = request.query as Record<string, string>;
     const mode = query["hub.mode"];
     const token = query["hub.verify_token"];
@@ -34,11 +63,34 @@ export async function whatsappRoutes(app: FastifyInstance) {
       return reply.code(200).send(challenge);
     }
 
-    return reply.code(403).send({ error: "Verification failed" });
-  });
+      return reply.code(403).send({ error: "Verification failed" });
+    }
+  );
 
   // POST /whatsapp/webhook — Incoming messages
-  app.post("/webhook", async (request, reply) => {
+  app.post("/webhook", {
+    config: { rawBody: true, rateLimit: { max: 120, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
+    const rawBody = request.rawBody;
+    const signature = request.headers["x-hub-signature-256"];
+
+    if (!config.WHATSAPP_APP_SECRET) {
+      request.log.error("WHATSAPP_APP_SECRET is not configured");
+      return reply.code(503).send({ error: "WhatsApp webhook is not configured" });
+    }
+
+    if (!rawBody || !Buffer.isBuffer(rawBody)) {
+      request.log.warn("Missing raw body for WhatsApp webhook verification");
+      return reply.code(400).send({ error: "Invalid webhook payload" });
+    }
+
+    const signatureValue =
+      typeof signature === "string" ? signature : Array.isArray(signature) ? signature[0] : undefined;
+
+    if (!verifyWhatsAppSignature(rawBody, signatureValue, config.WHATSAPP_APP_SECRET)) {
+      return reply.code(403).send({ error: "Invalid webhook signature" });
+    }
+
     // Always respond 200 immediately — Meta retries on non-2xx
     reply.code(200).send("EVENT_RECEIVED");
 
@@ -154,7 +206,10 @@ export async function whatsappRoutes(app: FastifyInstance) {
   // ── User-facing endpoints (JWT auth required) ──
 
   // GET /whatsapp/status — Check link status
-  app.get("/status", { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.get("/status", {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 120, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const { id: userId } = request.user;
 
     const [link] = await db
@@ -175,7 +230,10 @@ export async function whatsappRoutes(app: FastifyInstance) {
   });
 
   // POST /whatsapp/link — Start linking
-  app.post("/link", { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.post("/link", {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const { id: userId } = request.user;
     const { phoneNumber } = whatsappLinkSchema.parse(request.body);
 
@@ -233,7 +291,10 @@ export async function whatsappRoutes(app: FastifyInstance) {
   });
 
   // POST /whatsapp/verify — Confirm OTP
-  app.post("/verify", { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.post("/verify", {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const { id: userId } = request.user;
     const { code } = whatsappVerifySchema.parse(request.body);
 
@@ -279,7 +340,10 @@ export async function whatsappRoutes(app: FastifyInstance) {
   });
 
   // DELETE /whatsapp/link — Unlink
-  app.delete("/link", { preHandler: [app.authenticate] }, async (request, reply) => {
+  app.delete("/link", {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+  }, async (request, reply) => {
     const { id: userId } = request.user;
 
     await db
