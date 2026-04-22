@@ -100,7 +100,6 @@ export function canWriteMemory(input: {
   isMemoryQuery: boolean;
   extractionConfidence: number;
   message: string;
-  conversationTurnCount?: number;
   referencedMemories?: Array<{
     title?: string | null;
     summary?: string | null;
@@ -109,7 +108,6 @@ export function canWriteMemory(input: {
   if (input.isMemoryQuery) return false;
   if (input.intent === "retrieve") return false;
   if (input.intent === "ask" && input.extractionConfidence < 0.85) return false;
-  if ((input.conversationTurnCount ?? 0) < 8) return false;
   if (
     !isNovelAgainstReferencedMemories({
       message: input.message,

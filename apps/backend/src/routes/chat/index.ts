@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt } from "drizzle-orm";
 import { conversations, messages } from "@repo/db/schema";
 import { ingest } from "@repo/ingestion";
 import {
@@ -205,13 +205,6 @@ export async function chatRoutes(app: FastifyInstance) {
         .orderBy(asc(messages.createdAt))
         .limit(8);
 
-      const [countRow] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(messages)
-        .where(eq(messages.conversationId, resolvedConversationId));
-      const totalMessages = Number(countRow?.count ?? 0);
-      const conversationTurnCount = Math.floor(totalMessages / 2) + 1;
-
       const isMemoryQuery = detectMetaQuery(message);
       const detectedIntent = await detectIntent(message, config.GROQ_API_KEY);
       const decision = decideAction({
@@ -344,7 +337,6 @@ export async function chatRoutes(app: FastifyInstance) {
             isMemoryQuery,
             extractionConfidence: decision.extractionConfidence,
             message,
-            conversationTurnCount,
             referencedMemories: result.memories.map((memory) => ({
               title: memory.title,
               summary: memory.summary,
