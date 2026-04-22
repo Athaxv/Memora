@@ -8,6 +8,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const ALLOWED_TYPES = new Set([
   "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "image/png",
   "image/jpeg",
   "image/jpg",
@@ -16,6 +17,21 @@ const ALLOWED_TYPES = new Set([
   "text/markdown",
   "text/csv",
 ]);
+
+function normalizeMimeType(fileName: string, mimeType: string): string {
+  if (mimeType !== "application/octet-stream") return mimeType;
+
+  const ext = fileName.toLowerCase().split(".").pop();
+  if (ext === "pdf") return "application/pdf";
+  if (ext === "txt") return "text/plain";
+  if (ext === "md") return "text/markdown";
+  if (ext === "csv") return "text/csv";
+  if (ext === "docx") {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+
+  return mimeType;
+}
 
 export async function ingestRoutes(app: FastifyInstance) {
   // All routes require auth
@@ -62,7 +78,9 @@ export async function ingestRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: "No file provided" });
       }
 
-      if (!ALLOWED_TYPES.has(file.mimetype)) {
+      const normalizedMimeType = normalizeMimeType(file.filename, file.mimetype);
+
+      if (!ALLOWED_TYPES.has(normalizedMimeType)) {
         return reply
           .code(400)
           .send({ error: `Unsupported file type: ${file.mimetype}` });
@@ -99,7 +117,7 @@ export async function ingestRoutes(app: FastifyInstance) {
           title: file.filename.replace(/\.[^.]+$/, ""),
           tags,
           fileName: file.filename,
-          mimeType: file.mimetype,
+          mimeType: normalizedMimeType,
           fileBuffer: buffer,
         }
       );

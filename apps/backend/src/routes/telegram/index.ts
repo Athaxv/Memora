@@ -325,6 +325,7 @@ export async function telegramRoutes(app: FastifyInstance) {
         db,
         groqApiKey: config.GROQ_API_KEY,
         hfApiKey: config.HF_API_KEY,
+        intentOverride: intent.intent,
       });
 
       await sendTelegramMessage(chatIdStr, result.reply, getTelegramConfig());

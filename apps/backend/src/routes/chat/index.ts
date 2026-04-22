@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { and, asc, desc, eq, inArray, lt } from "drizzle-orm";
-import { classifyIntent } from "@repo/ai/intent";
+import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { conversations, messages } from "@repo/db/schema";
 import { ingest } from "@repo/ingestion";
 import {
@@ -9,31 +8,14 @@ import {
   chatSessionParamsSchema,
   chatSessionsQuerySchema,
 } from "@repo/validators";
-import { processChat } from "../../services/chat";
 import { db } from "../../db";
 import { config } from "../../config";
-
-function looksLikeStoreRequest(message: string): boolean {
-  const text = message.toLowerCase();
-
-  const storeSignals = [
-    /\b(save|store|remember|note|log|record)\b/,
-    /\bcreate\b.*\bmemory\b/,
-    /\badd\b.*\bmemory\b/,
-  ];
-
-  const rejectSignals = [
-    /\b(do|did|have|has|can|could|would|will)\b.*\bremember\b/,
-    /\bwhat\b.*\bremember\b/,
-    /\brecall\b/,
-    /\blist\b.*\bmemories\b/,
-  ];
-
-  const hasStoreSignal = storeSignals.some((pattern) => pattern.test(text));
-  const hasRejectSignal = rejectSignals.some((pattern) => pattern.test(text));
-
-  return hasStoreSignal && !hasRejectSignal;
-}
+import { detectIntent } from "../../services/intent-service";
+import { runChatOrchestration } from "../../services/chat-orchestrator";
+import { decideAction } from "../../services/decision-engine";
+import { runMemoryExtraction } from "../../services/memory-graph";
+import { canWriteMemory, detectMetaQuery } from "../../services/memory-policy";
+import { updateActiveTopicTracking } from "../../services/topic-tracker";
 
 export async function chatRoutes(app: FastifyInstance) {
   app.addHook("preHandler", app.authenticate);
@@ -223,11 +205,45 @@ export async function chatRoutes(app: FastifyInstance) {
         .orderBy(asc(messages.createdAt))
         .limit(8);
 
-      const detectedIntent = await classifyIntent(message, config.GROQ_API_KEY);
+      const [countRow] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(messages)
+        .where(eq(messages.conversationId, resolvedConversationId));
+      const totalMessages = Number(countRow?.count ?? 0);
+      const conversationTurnCount = Math.floor(totalMessages / 2) + 1;
+
+      const isMemoryQuery = detectMetaQuery(message);
+      const detectedIntent = await detectIntent(message, config.GROQ_API_KEY);
+      const decision = decideAction({
+        intent: detectedIntent.intent,
+        entities: detectedIntent.entities ?? [],
+        confidence: detectedIntent.confidence ?? 0,
+        message,
+        previousContext: recentHistory,
+        isMemoryQuery,
+      });
 
       let result: {
         reply: string;
         intent: string;
+        confidence?: number;
+        decision?: {
+          retrievalMode: "HIGH" | "MEDIUM" | "LOW" | "NONE";
+          shouldStore: boolean;
+          shouldEvaluateMemory: boolean;
+          reasoningDepth: number;
+          extractionConfidence: number;
+        };
+        grounding?: {
+          normalizedMemoryIds: string[];
+          legacyMemoryIds: string[];
+          webSources?: string[];
+          sessionState: {
+            activeTopics: string[];
+            openLoops: string[];
+          } | null;
+        };
+        memoryWriteStatus?: "stored" | "pending" | "skipped";
         memories: Array<{
           id: string;
           title: string | null;
@@ -237,8 +253,7 @@ export async function chatRoutes(app: FastifyInstance) {
         }>;
       };
 
-      const shouldStore =
-        detectedIntent.intent === "store" || looksLikeStoreRequest(message);
+      const shouldStore = decision.shouldStore && !isMemoryQuery;
 
       if (shouldStore) {
         const created = await ingest(
@@ -257,6 +272,13 @@ export async function chatRoutes(app: FastifyInstance) {
         result = {
           reply: `Saved to your memory graph. I stored this as "${created.title || "Untitled memory"}".`,
           intent: "store",
+          confidence: 1,
+          memoryWriteStatus: "stored",
+          grounding: {
+            normalizedMemoryIds: [],
+            legacyMemoryIds: [created.nodeId],
+            sessionState: null,
+          },
           memories: [
             {
               id: created.nodeId,
@@ -268,15 +290,19 @@ export async function chatRoutes(app: FastifyInstance) {
           ],
         };
       } else {
-        result = await processChat({
+        result = await runChatOrchestration({
           userId,
+          conversationId: resolvedConversationId,
           message,
           db,
           groqApiKey: config.GROQ_API_KEY,
           hfApiKey: config.HF_API_KEY,
+          webSearchApiKey: config.WEB_SEARCH_API_KEY,
           intentOverride: detectedIntent.intent,
+          decision,
           history: recentHistory,
         });
+        result.memoryWriteStatus = "pending";
       }
 
       try {
@@ -293,12 +319,73 @@ export async function chatRoutes(app: FastifyInstance) {
           metadata: {
             intent: result.intent,
             memoryIds: result.memories.map((memory) => memory.id),
+            memoryRefs: result.memories.map((m) => ({
+              id: m.id,
+              title: m.title,
+              summary: m.summary,
+              type: m.type,
+            })),
+            grounding: result.grounding,
+            confidence: result.confidence,
+            memoryWriteStatus: result.memoryWriteStatus,
+            decision,
           },
         });
         await db
           .update(conversations)
           .set({ updatedAt: new Date() })
           .where(eq(conversations.id, resolvedConversationId));
+
+        const shouldWriteMemory =
+          decision.shouldEvaluateMemory &&
+          !isMemoryQuery &&
+          canWriteMemory({
+            intent: result.intent,
+            isMemoryQuery,
+            extractionConfidence: decision.extractionConfidence,
+            message,
+            conversationTurnCount,
+            referencedMemories: result.memories.map((memory) => ({
+              title: memory.title,
+              summary: memory.summary,
+            })),
+          });
+
+        if (shouldWriteMemory) {
+          const extractionPromise = runMemoryExtraction({
+            db,
+            userId,
+            groqApiKey: config.GROQ_API_KEY,
+            hfApiKey: config.HF_API_KEY,
+            userMessage: message,
+            assistantMessage: result.reply,
+            explicitStore: shouldStore,
+            history: recentHistory,
+            isMemoryQuery,
+            intent: result.intent,
+            extractionConfidence: decision.extractionConfidence,
+          }).catch((memoryError) => {
+            request.log.error(memoryError, "Policy-driven memory extraction failed");
+          });
+
+          if (shouldStore) {
+            await extractionPromise;
+          } else {
+            void extractionPromise;
+          }
+        }
+
+        await updateActiveTopicTracking({
+          db,
+          userId,
+          conversationId: resolvedConversationId,
+          message,
+          entities: detectedIntent.entities ?? [],
+          retrievedMemories: result.memories.map((memory) => ({
+            summary: memory.summary,
+            type: memory.type,
+          })),
+        });
       } catch (persistError) {
         request.log.error(persistError, "Failed to persist chat messages");
       }
@@ -306,6 +393,9 @@ export async function chatRoutes(app: FastifyInstance) {
       return reply.send({
         message: result.reply,
         intent: result.intent,
+        confidence: result.confidence ?? null,
+        grounding: result.grounding ?? null,
+        memoryWriteStatus: result.memoryWriteStatus ?? "skipped",
         memories: result.memories,
         conversationId: resolvedConversationId,
       });

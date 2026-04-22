@@ -16,6 +16,7 @@ import { tagsRoutes } from "./routes/tags/index";
 import { chatRoutes } from "./routes/chat/index";
 import { whatsappRoutes } from "./routes/whatsapp/index";
 import { telegramRoutes } from "./routes/telegram/index";
+import { internalRoutes } from "./routes/internal/index";
 import { getMemoryGraph } from "./services/memory-graph";
 
 async function main() {
@@ -35,6 +36,7 @@ async function main() {
   await app.register(ingestRoutes, { prefix: "/ingest" });
   await app.register(tagsRoutes, { prefix: "/tags" });
   await app.register(chatRoutes, { prefix: "/chat" });
+  await app.register(internalRoutes, { prefix: "/internal" });
   await app.register(whatsappRoutes, { prefix: "/whatsapp" });
   await app.register(telegramRoutes, { prefix: "/telegram" });
 
@@ -70,7 +72,13 @@ async function main() {
   app.get("/health", async (request, reply) => {
     try {
       await db.execute(sql`select 1`);
-      return reply.send({ status: "ok" });
+      return reply.send({
+        status: "ok",
+        architecture: {
+          decisionEngine: "policy-v1",
+          memoryGraphOps: "create-update-link",
+        },
+      });
     } catch (error) {
       request.log.error(error, "Health check failed");
       return reply.code(503).send({ status: "degraded" });
