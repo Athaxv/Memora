@@ -9,6 +9,7 @@ RUN bun install --frozen-lockfile
 RUN bun run --cwd apps/backend build
 RUN chmod +x apps/backend/scripts/start-render.sh
 RUN chmod +x apps/backend/scripts/migrate-render.sh
+RUN chmod +x apps/backend/scripts/run-built.sh
 
 ENV NODE_ENV=production
 EXPOSE 10000
