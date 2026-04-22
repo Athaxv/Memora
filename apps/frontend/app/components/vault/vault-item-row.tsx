@@ -20,10 +20,10 @@ export function VaultItemRow({ id, title, summary, type, sourceUrl, createdAt }:
   return (
     <Link
       href={`/memories/${id}`}
-      className="group relative flex items-center gap-4 border-b border-dashed border-[#fbbf9b]/20 px-2 py-4 transition-all hover:bg-[#fef2e4]/50 hover:px-3"
+      className="group relative flex items-center gap-4 border-b border-dashed border-zinc-200 px-2 py-4 transition-all hover:bg-white/50 hover:px-3"
     >
       {/* Icon */}
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-zinc-200 bg-white transition-colors group-hover:border-[#fbbf9b]/60">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-zinc-200 bg-white transition-colors group-hover:border-zinc-200">
         {faviconUrl ? (
           <img src={faviconUrl} alt="" width={16} height={16} className="block" />
         ) : (
@@ -59,12 +59,12 @@ export function VaultItemRow({ id, title, summary, type, sourceUrl, createdAt }:
       </div>
 
       {/* Timestamp */}
-      <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-[#d97706] transition-colors">
+      <span className="shrink-0 text-[11px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-zinc-900 transition-colors">
         {relativeTime(createdAt)}
       </span>
 
       {/* Hover arrow */}
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#fbbf9b] opacity-0 group-hover:opacity-100 transition-opacity">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
         <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
       </svg>
     </Link>

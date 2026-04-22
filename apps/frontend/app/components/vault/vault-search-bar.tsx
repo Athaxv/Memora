@@ -44,24 +44,24 @@ export function VaultSearchBar({
   return (
     <div className="mx-auto w-full max-w-[640px] pt-16 pb-10">
       {/* Greeting */}
-      <h2 className="text-[1.5rem] font-bold text-[#111118] tracking-tight mb-1">
+      <h2 className="text-[1.25rem] md:text-[1.5rem] font-bold text-[#111118] tracking-tight mb-1">
         Your vault
       </h2>
-      <p className="text-[14px] text-zinc-400 font-medium mb-8">
+      <p className="text-[13px] md:text-[14px] text-zinc-400 font-medium mb-6 md:mb-8">
         Save a link or search your memories
       </p>
 
       <form onSubmit={handleSubmit}>
         <div className="relative group">
           {/* Corner squares */}
-          <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
-          <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
-          <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
-          <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4] transition-colors group-focus-within:border-[#d97706]" />
+          <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white transition-colors group-focus-within:border-zinc-900" />
+          <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white transition-colors group-focus-within:border-zinc-900" />
+          <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white transition-colors group-focus-within:border-zinc-900" />
+          <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white transition-colors group-focus-within:border-zinc-900" />
 
-          <div className="flex items-center border border-zinc-200 bg-white transition-colors group-focus-within:border-[#fbbf9b]">
+          <div className="flex items-center border border-zinc-200 bg-white transition-colors group-focus-within:border-zinc-200">
             {/* Search / link icon */}
-            <div className="pl-5 text-zinc-400 transition-colors group-focus-within:text-[#d97706]">
+            <div className="pl-5 text-zinc-400 transition-colors group-focus-within:text-zinc-900">
               {inputIsUrl ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
