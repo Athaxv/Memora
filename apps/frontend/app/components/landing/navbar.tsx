@@ -50,8 +50,8 @@ export function Navbar() {
         className={cn(
           "w-full flex justify-center transition-all duration-500 pointer-events-auto",
           scrolled
-            ? "border-b border-[#e4e4e7]/25 bg-[#ffffff]/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
-            : "border-b border-white/10 bg-transparent backdrop-blur-[2px]"
+            ? "border-b border-zinc-200/50 bg-white/60 backdrop-blur-2xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
+            : "border-b border-white/10 bg-white/5 backdrop-blur-md"
         )}
       >
         <div
