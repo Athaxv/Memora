@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Github, Linkedin, Twitter, Globe } from "lucide-react";
+import { Code2, Briefcase, MessageCircle, Globe } from "lucide-react";
 import { api } from "@/lib/api";
 
 const fields = [
-  { key: "github", label: "GitHub", icon: Github, placeholder: "https://github.com/username" },
-  { key: "linkedin", label: "LinkedIn", icon: Linkedin, placeholder: "https://linkedin.com/in/username" },
-  { key: "twitter", label: "Twitter / X", icon: Twitter, placeholder: "https://x.com/username" },
+  { key: "github", label: "GitHub", icon: Code2, placeholder: "https://github.com/username" },
+  { key: "linkedin", label: "LinkedIn", icon: Briefcase, placeholder: "https://linkedin.com/in/username" },
+  { key: "twitter", label: "Twitter / X", icon: MessageCircle, placeholder: "https://x.com/username" },
   { key: "portfolio", label: "Portfolio", icon: Globe, placeholder: "https://yoursite.com" },
 ] as const;
 
@@ -66,7 +66,7 @@ export function AddSocialLinksStep({ onNext }: { onNext: () => void }) {
       <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
       <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[1.5rem] md:text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Add your links
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">

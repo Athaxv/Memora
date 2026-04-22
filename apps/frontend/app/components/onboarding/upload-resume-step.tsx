@@ -9,6 +9,19 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
+  async function readErrorMessage(res: Response): Promise<string> {
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.error === "string") {
+        return data.error;
+      }
+    }
+
+    const text = await res.text().catch(() => "");
+    return text || "Failed to upload resume";
+  }
+
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -26,8 +39,7 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Failed to upload resume");
+        setError(await readErrorMessage(res));
         setLoading(false);
         return;
       }
@@ -35,10 +47,15 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
       const data = await res.json();
 
       // Save resume reference to profile
-      await api("/auth/me", {
+      const profileRes = await api("/auth/me", {
         method: "PATCH",
         body: JSON.stringify({ resumeNodeId: data.nodeId }),
       });
+
+      if (!profileRes.ok) {
+        setError(await readErrorMessage(profileRes));
+        return;
+      }
 
       setFileName(file.name);
     } catch {
@@ -55,7 +72,7 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
       <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
       <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[1.5rem] md:text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Upload your resume
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">
@@ -73,7 +90,7 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
           <input
             ref={fileRef}
             type="file"
-            accept=".pdf,.txt,.md,.csv"
+            accept=".pdf,.txt,.md,.csv,.docx"
             onChange={handleFile}
             className="hidden"
           />
@@ -94,7 +111,7 @@ export function UploadResumeStep({ onNext }: { onNext: () => void }) {
           </button>
 
           <p className="mt-3 text-center text-[12px] text-zinc-400 font-medium">
-            PDF, TXT, Markdown, or CSV — up to 10MB
+            PDF, DOCX, TXT, Markdown, or CSV — up to 10MB
           </p>
         </>
       ) : (

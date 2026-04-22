@@ -46,9 +46,22 @@ export function Sidebar() {
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "true") setCollapsed(true);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setCollapsed(true);
+      } else {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored === "true") setCollapsed(true);
+        else setCollapsed(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
     setMounted(true);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -120,8 +133,8 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        ${collapsed ? "w-15" : "w-56"}
-        flex h-screen shrink-0 flex-col border-r border-[#fbbf9b]/25 bg-[#fef8f0]
+        ${collapsed ? "w-16" : "w-60"}
+        flex h-screen shrink-0 flex-col border-r border-zinc-200/50 bg-zinc-50/70 backdrop-blur-xl
         transition-all duration-300 ease-in-out
         ${mounted ? "opacity-100" : "opacity-0"}
       `}
@@ -160,8 +173,8 @@ export function Sidebar() {
           onClick={toggleCollapsed}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={`
-            flex items-center gap-3 rounded-sm px-3 py-2
-            text-zinc-400 hover:text-zinc-700 hover:bg-[#fef2e4]/60
+            flex items-center gap-3 rounded-md px-3 py-2
+            text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/50
             transition-all duration-150 w-full
             ${collapsed ? "justify-center px-0" : ""}
           `}
@@ -184,7 +197,7 @@ export function Sidebar() {
       </div>
 
       {/* Divider */}
-      <div className="border-t border-[#fbbf9b]/25" />
+      <div className="border-t border-zinc-200/80" />
 
       {/* Primary action */}
       <div className="px-2 pt-3">
@@ -198,11 +211,11 @@ export function Sidebar() {
           `}
           title={collapsed ? "Start new chat" : undefined}
         >
-          <span className="absolute inset-0 border border-zinc-900 bg-zinc-900 transition-colors group-hover:bg-zinc-800" />
-          <span className="absolute -left-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-          <span className="absolute -right-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-          <span className="absolute -left-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-          <span className="absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <span className="absolute inset-0 border border-zinc-900 bg-zinc-900 transition-colors group-hover:bg-zinc-800 rounded-sm" />
+          <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
+          <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
+          <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
+          <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-300 bg-white" />
           <svg
             className="relative z-10 shrink-0"
             width="18"
@@ -240,12 +253,12 @@ export function Sidebar() {
               href={item.href}
               title={collapsed ? item.label : undefined}
               className={`
-                relative flex items-center gap-3 rounded-sm py-2.5
+                relative flex items-center gap-3 rounded-md py-2.5
                 transition-all duration-150
                 ${
                   active
-                    ? "bg-white border border-[#fbbf9b]/40 text-[#111118] font-semibold"
-                    : "text-zinc-500 hover:bg-[#fef2e4]/60 hover:text-[#d97706] border border-transparent"
+                    ? "bg-white border border-zinc-200 text-zinc-900 font-semibold shadow-sm"
+                    : "text-zinc-500 hover:bg-zinc-200/50 hover:text-zinc-900 border border-transparent"
                 }
                 ${collapsed ? "mx-auto h-10 w-10 justify-center gap-0 px-0 py-0" : "px-3"}
               `}
@@ -253,10 +266,10 @@ export function Sidebar() {
               {/* Corner accents on active item */}
               {active && (
                 <>
-                  <span className="absolute -left-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -right-0.75 -top-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -left-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                  <span className="absolute -right-0.75 -bottom-0.75 h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
                 </>
               )}
 
@@ -276,9 +289,9 @@ export function Sidebar() {
       </nav>
 
       {!collapsed && (
-        <div className="relative flex h-full min-h-0 flex-1 flex-col border-t border-[#fbbf9b]/25 px-2 pt-3 overflow-hidden">
-          <div className="pointer-events-none absolute inset-x-2 top-0 h-6 bg-linear-to-b from-[#fef8f0] to-transparent" />
-          <div className="pointer-events-none absolute inset-x-2 bottom-0 h-6 bg-linear-to-t from-[#fef8f0] to-transparent" />
+        <div className="relative flex h-full min-h-0 flex-1 flex-col border-t border-zinc-200/50 px-2 pt-3 overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-2 top-0 h-6 bg-gradient-to-b from-zinc-50/0 to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-x-2 bottom-0 h-6 bg-gradient-to-t from-zinc-50/0 to-transparent z-10" />
 
           <div className="px-3 pb-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
@@ -286,17 +299,17 @@ export function Sidebar() {
             </p>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1 pb-2 scroll-smooth overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgba(251,191,153,0.55)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-[#fef8f0] [&::-webkit-scrollbar-thumb]:bg-[#fbbf9b]/50 hover:[&::-webkit-scrollbar-thumb]:bg-[#d97706]/70">
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1 pb-2 scroll-smooth overscroll-contain [scrollbar-width:thin] [scrollbar-color:rgba(161,161,170,0.5)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border [&::-webkit-scrollbar-thumb]:border-zinc-50 [&::-webkit-scrollbar-thumb]:bg-zinc-300/80 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400">
             {recentChats.map((chat) => {
               const isActive = pathname === "/chat" && activeSessionId === chat.id;
 
               return (
                 <div
                   key={chat.id}
-                  className={`group flex items-center gap-2 rounded-sm border px-2 py-2 transition-colors ${
+                  className={`group flex items-center gap-2 rounded-md border px-2 py-2 transition-colors ${
                     isActive
-                      ? "border-[#fbbf9b]/70 bg-white"
-                      : "border-transparent hover:border-[#fbbf9b]/35 hover:bg-[#fef2e4]/50"
+                      ? "border-zinc-200 bg-white shadow-sm"
+                      : "border-transparent hover:border-zinc-200/80 hover:bg-zinc-100/50"
                   }`}
                 >
                   <Link href={`/chat?sessionId=${chat.id}`} className="min-w-0 flex-1">
@@ -325,7 +338,7 @@ export function Sidebar() {
               <button
                 onClick={() => void loadRecentChats(false)}
                 disabled={chatLoading}
-                className="w-full rounded-sm border border-[#fbbf9b]/30 bg-white px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:border-[#fbbf9b]/60 disabled:opacity-50"
+                className="w-full rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50"
               >
                 {chatLoading ? "Loading..." : "Load more"}
               </button>
@@ -335,13 +348,13 @@ export function Sidebar() {
       )}
 
       {/* Footer */}
-      <div className="relative z-10 border-t border-[#fbbf9b]/25 bg-[#fef8f0] px-2 py-3">
+      <div className="relative z-10 border-t border-zinc-200/50 px-2 py-3">
         <button
           onClick={handleSignOut}
           title={collapsed ? "Sign out" : undefined}
           className={`
-            flex items-center gap-3 rounded-sm py-2.5 w-full
-            text-zinc-400 hover:text-zinc-900 hover:bg-[#fef2e4]/60
+            flex items-center gap-3 rounded-md py-2.5 w-full
+            text-zinc-500 hover:text-zinc-900 hover:bg-zinc-200/50
             transition-all duration-150
             ${collapsed ? "justify-center px-2" : "px-3"}
           `}

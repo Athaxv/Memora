@@ -52,7 +52,7 @@ export function SaveFirstLinkStep({ onNext }: { onNext: () => void }) {
       <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
       <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
 
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[1.5rem] md:text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         Save your first link
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">

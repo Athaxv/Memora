@@ -32,7 +32,7 @@ export function DoneStep() {
         </svg>
       </div>
 
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[1.5rem] md:text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
         You&apos;re all set
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">
