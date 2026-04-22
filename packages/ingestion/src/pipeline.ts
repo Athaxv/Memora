@@ -1,6 +1,7 @@
 import { generateEmbedding } from "@repo/ai/embeddings";
 import { summarize } from "@repo/ai/summarize";
 import { autoTag } from "@repo/ai/auto-tag";
+import { createArtifact } from "@repo/memory";
 import {
   createNode,
   computeSemanticEdges,
@@ -58,6 +59,24 @@ export async function ingest(
   );
   const embedding = await generateEmbedding(textForEmbedding, ctx.hfApiKey, "document");
 
+  const artifact = await createArtifact(ctx.db, {
+    userId: input.userId,
+    type:
+      input.type === "url"
+        ? "link"
+        : input.type === "file"
+          ? resolveNodeType(input)
+          : "note",
+    rawContent: extracted.content,
+    source: resolveSource(input),
+    sourceRef: extracted.sourceUrl ?? input.fileName ?? undefined,
+    metadata: {
+      title: extracted.title,
+      inputType: input.type,
+    },
+    embedding: embedding ?? undefined,
+  });
+
   // 4. Auto-tag via Groq
   const aiTags = await autoTag(extracted.content, ctx.groqApiKey);
   const aiTagNames = aiTags.map((t) => t.name);
@@ -109,6 +128,7 @@ export async function ingest(
 
   return {
     nodeId: node.id,
+    artifactId: artifact.id,
     title: node.title,
     summary: summaryText,
     tags: allTagNames,

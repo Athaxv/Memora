@@ -14,6 +14,10 @@ vi.mock("@repo/ai/auto-tag", () => ({
   autoTag: vi.fn(),
 }));
 
+vi.mock("@repo/memory", () => ({
+  createArtifact: vi.fn(),
+}));
+
 vi.mock("@repo/graph", () => ({
   createNode: vi.fn(),
   computeSemanticEdges: vi.fn(),
@@ -39,6 +43,7 @@ import { ingest } from "../pipeline";
 import { generateEmbedding } from "@repo/ai/embeddings";
 import { summarize } from "@repo/ai/summarize";
 import { autoTag } from "@repo/ai/auto-tag";
+import { createArtifact } from "@repo/memory";
 import {
   createNode,
   computeSemanticEdges,
@@ -71,6 +76,7 @@ describe("resolveNodeType", () => {
     vi.mocked(summarize).mockResolvedValue("A summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-1" } as any);
     vi.mocked(createNode).mockResolvedValue({ id: "node-1", title: "T" } as any);
     vi.mocked(computeSemanticEdges).mockResolvedValue(0);
     vi.mocked(upsertTags).mockResolvedValue([]);
@@ -218,6 +224,7 @@ describe("resolveSource", () => {
     vi.mocked(summarize).mockResolvedValue("A summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-1" } as any);
     vi.mocked(createNode).mockResolvedValue({ id: "node-1", title: "T" } as any);
     vi.mocked(computeSemanticEdges).mockResolvedValue(0);
     vi.mocked(upsertTags).mockResolvedValue([]);
@@ -305,6 +312,7 @@ describe("ingest (full pipeline)", () => {
       { name: "productivity", confidence: 0.9 },
       { name: "notes", confidence: 0.85 },
     ]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-1" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-123",
       title: "My Note",
@@ -336,6 +344,15 @@ describe("ingest (full pipeline)", () => {
       "document"
     );
 
+    expect(createArtifact).toHaveBeenCalledWith(
+      mockDb,
+      expect.objectContaining({
+        userId: "u1",
+        type: "note",
+        source: "manual",
+      })
+    );
+
     // Verify autoTag was called
     expect(autoTag).toHaveBeenCalledWith("Note content here", "test-groq-key");
 
@@ -362,6 +379,7 @@ describe("ingest (full pipeline)", () => {
     // Verify the result
     expect(result).toEqual({
       nodeId: "node-123",
+      artifactId: "artifact-1",
       title: "My Note",
       summary: "This is a summary of the note.",
       tags: ["productivity", "notes"],
@@ -378,6 +396,7 @@ describe("ingest (full pipeline)", () => {
     vi.mocked(summarize).mockResolvedValue("Summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-url" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-url",
       title: "Web Page Title",
@@ -411,6 +430,7 @@ describe("ingest (full pipeline)", () => {
     vi.mocked(summarize).mockResolvedValue("Summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-file" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-file",
       title: "Document",
@@ -442,6 +462,7 @@ describe("ingest (full pipeline)", () => {
     vi.mocked(summarize).mockResolvedValue("Summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-no-emb" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-no-emb",
       title: "T",
@@ -468,6 +489,7 @@ describe("ingest (full pipeline)", () => {
       { name: "ai-tag", confidence: 0.9 },
       { name: "shared-tag", confidence: 0.8 },
     ]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-tags" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-tags",
       title: "T",
@@ -525,6 +547,7 @@ describe("ingest (full pipeline)", () => {
     vi.mocked(summarize).mockResolvedValue("Summary");
     vi.mocked(generateEmbedding).mockResolvedValue(null);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-notags" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "node-notags",
       title: "T",
@@ -548,6 +571,7 @@ describe("ingest (full pipeline)", () => {
     vi.mocked(summarize).mockResolvedValue("The summary");
     vi.mocked(generateEmbedding).mockResolvedValue([1, 2]);
     vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-n1" } as any);
     vi.mocked(createNode).mockResolvedValue({
       id: "n1",
       title: "Extracted Title",
