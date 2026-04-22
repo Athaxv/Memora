@@ -19,6 +19,7 @@ export interface IngestInput {
 
 export interface IngestResult {
   nodeId: string;
+  artifactId?: string;
   title: string | null;
   summary: string;
   tags: string[];
