@@ -30,7 +30,7 @@ describe("embeddings", () => {
     expect(result).toBeNull();
   });
 
-  it('generateEmbedding adds "search_document: " prefix for document purpose', async () => {
+  it("generateEmbedding adds the document retrieval prefix", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([0.1, 0.2, 0.3]),
@@ -40,10 +40,10 @@ describe("embeddings", () => {
     await generateEmbedding("test text", "fake-key", "document");
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.inputs).toBe("search_document: test text");
+    expect(body.inputs).toBe("Represent this passage for retrieval: test text");
   });
 
-  it('generateEmbedding adds "search_query: " prefix for query purpose', async () => {
+  it("generateEmbedding adds the query retrieval prefix", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([0.1, 0.2, 0.3]),
@@ -53,7 +53,9 @@ describe("embeddings", () => {
     await generateEmbedding("test text", "fake-key", "query");
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.inputs).toBe("search_query: test text");
+    expect(body.inputs).toBe(
+      "Represent this sentence for searching relevant passages: test text"
+    );
   });
 
   it("generateEmbedding defaults to document prefix when purpose is omitted", async () => {
@@ -66,7 +68,7 @@ describe("embeddings", () => {
     await generateEmbedding("test text", "fake-key");
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.inputs).toMatch(/^search_document: /);
+    expect(body.inputs).toMatch(/^Represent this passage for retrieval: /);
   });
 
   it("generateEmbeddings adds correct prefix for each text in batch", async () => {
@@ -83,7 +85,10 @@ describe("embeddings", () => {
     await generateEmbeddings(["a", "b"], "fake-key", "query");
 
     const body = JSON.parse(mockFetch.mock.calls[0][1].body);
-    expect(body.inputs).toEqual(["search_query: a", "search_query: b"]);
+    expect(body.inputs).toEqual([
+      "Represent this sentence for searching relevant passages: a",
+      "Represent this sentence for searching relevant passages: b",
+    ]);
   });
 });
 

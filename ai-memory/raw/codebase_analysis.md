@@ -195,3 +195,77 @@
 	- Added defensive fallback in [packages/memory/src/search.ts](packages/memory/src/search.ts) so missing normalized-memory tables return `[]` instead of crashing chat; retrieval then falls back to legacy graph search.
 	- `bun --filter @repo/db db:migrate` failed because the live database already had older objects and migration history was drifted (`type "edge_type" already exists`).
 	- Applied schema reconciliation with `bun --filter @repo/db db:push`, which created the missing normalized memory tables successfully.
+
+## Implementation notes (2026-04-22, policy-driven decision engine + graph memory ops)
+- Added policy layer [apps/backend/src/services/decision-engine.ts](apps/backend/src/services/decision-engine.ts) with `decideAction()` that outputs:
+	- `retrievalMode` (`HIGH`/`MEDIUM`/`LOW`/`NONE`)
+	- `shouldStore`
+	- `shouldEvaluateMemory`
+	- `reasoningDepth`
+- Refactored chat orchestration:
+	- [apps/backend/src/services/chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts) now applies decision gating before retrieval.
+	- Retrieval is skipped entirely when mode is `NONE`.
+	- `reasoningDepth` is passed through to response generation.
+- Upgraded retrieval strategy:
+	- [apps/backend/src/services/retrieval-service.ts](apps/backend/src/services/retrieval-service.ts) now accepts retrieval mode.
+	- `HIGH`: broader normalized search + semantic legacy search + graph neighbor expansion.
+	- `MEDIUM`: vector-driven retrieval with smaller limits.
+	- `LOW`: minimal normalized retrieval and no legacy expansion.
+- Replaced always-on post-turn processing in chat route:
+	- [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts) now calls memory extraction only when `decision.shouldEvaluateMemory` is true.
+	- Store behavior now uses policy decision output instead of ad-hoc regex-only heuristics.
+- Extended [apps/backend/src/services/memory-graph.ts](apps/backend/src/services/memory-graph.ts) with graph mutation operations:
+	- `createNode(memory, deps)`
+	- `updateNode(existingNode, memory, deps)`
+	- `linkNodes(nodeA, nodeB, relation, deps)`
+	- plus `runMemoryExtraction()` that converts extracted candidates into structured memory and executes `CREATE`/`UPDATE`/`LINK` actions.
+- Added dedupe guardrail:
+	- Similarity > `0.9` forces `UPDATE` over `CREATE`.
+	- Same entity + same memory type also updates existing nodes.
+
+## Implementation notes (2026-04-22, context-aware memory-safe chat controls)
+- Added meta-awareness + write guards:
+	- New helper [apps/backend/src/services/memory-policy.ts](apps/backend/src/services/memory-policy.ts) provides:
+		- `detectMetaQuery(message)`
+		- `canWriteMemory({ intent, isMemoryQuery, extractionConfidence, message })`
+		- `isDurableMemoryText(message)`
+		- retrieval ranking utility and topic extraction utility.
+	- `detectMetaQuery` now executes before decisioning in [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts), and `isMemoryQuery` is passed into the decision engine.
+	- Decision override for meta queries in [apps/backend/src/services/decision-engine.ts](apps/backend/src/services/decision-engine.ts):
+		- `retrievalMode=HIGH`, `shouldStore=false`, `shouldEvaluateMemory=false`, `reasoningDepth=1`.
+- Retrieval upgraded for conversation context:
+	- [apps/backend/src/services/retrieval-service.ts](apps/backend/src/services/retrieval-service.ts) now accepts `conversationState`.
+	- Retrieval query is expanded with active topic when present.
+	- Returned memories are ranked with weighted score `(semantic*0.5 + importance*0.3 + recency*0.2)`.
+	- Goal/preference memories are explicitly prioritized in final result ordering.
+- Orchestration grounding strengthened:
+	- [apps/backend/src/services/chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts) fetches conversation state for retrieval and injects structured grounding instructions into prompt context.
+- Topic tracking added:
+	- New service [apps/backend/src/services/topic-tracker.ts](apps/backend/src/services/topic-tracker.ts) updates `conversation_state.active_topics` after chat turns using entities + retrieved memory + fallback keyword topic extraction.
+	- Recent entities are retained up to max 5 within active topics ordering.
+- Hard memory-write block implemented for meta queries:
+	- Chat route blocks store/extract on meta queries.
+	- [apps/backend/src/services/memory-graph.ts](apps/backend/src/services/memory-graph.ts) early-returns when `isMemoryQuery` and enforces durability checks before create/update.
+
+## Implementation notes (2026-04-22, novelty-gated auto-memory writes)
+- Reworked auto-write behavior to reduce repeated memory pollution in chat:
+	- [apps/backend/src/services/memory-policy.ts](apps/backend/src/services/memory-policy.ts) now includes `isNovelAgainstReferencedMemories(...)` with lexical similarity checks against referenced memories.
+	- `canWriteMemory(...)` now additionally requires:
+		- `conversationTurnCount >= 8`
+		- novelty pass against referenced memories
+		- durability pattern pass.
+- [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts) now computes conversation turn count from persisted message count and passes referenced memories into `canWriteMemory(...)`.
+- Retrieval/referenced-memory generation logic was intentionally left unchanged; write gating now happens post-retrieval using returned references.
+
+## Implementation notes (2026-04-22, optional web context retrieval)
+- Added optional web search integration for context enrichment without replacing memory retrieval:
+	- New service [apps/backend/src/services/web-search-service.ts](apps/backend/src/services/web-search-service.ts) includes:
+		- `shouldUseWebSearch(...)` (gated trigger based on intent/freshness/no-strong-memory-context),
+		- `searchWebContext(...)` using Tavily API when key is configured.
+- Config now supports web search API key:
+	- [apps/backend/src/config.ts](apps/backend/src/config.ts): `WEB_SEARCH_API_KEY` (or fallback `TAVILY_API_KEY`).
+- Orchestration wiring:
+	- [apps/backend/src/services/chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts) conditionally fetches web results and includes source URLs in grounding metadata.
+- Prompt context wiring:
+	- [apps/backend/src/services/context-builder.ts](apps/backend/src/services/context-builder.ts) now includes a dedicated `Web context` section.
+	- [apps/backend/src/services/reasoning-service.ts](apps/backend/src/services/reasoning-service.ts) system prompt now explicitly handles optional web context and source citation behavior.

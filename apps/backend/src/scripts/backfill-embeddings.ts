@@ -1,4 +1,6 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+
+dotenv.config();
 import { and, eq, isNull } from "drizzle-orm";
 import { createDb } from "@repo/db/client";
 import { nodes } from "@repo/db/schema";

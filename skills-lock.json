@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "b4d466bd42cc56bbdf1a6d367e22060ea7c42a170372b74f7dbe66b599939910"
     },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "computedHash": "6337038fe1fe6bbe1b9f252ab678ee575859190bab6f0f246f4061824eb40875"
+    },
     "vercel-react-best-practices": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",

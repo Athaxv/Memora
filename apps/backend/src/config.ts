@@ -1,4 +1,6 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 function required(name: string): string {
   const value = process.env[name];
@@ -49,6 +51,7 @@ export const config = {
   COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || undefined,
   GROQ_API_KEY: required("GROQ_API_KEY"),
   HF_API_KEY: process.env.HF_API_KEY || undefined,
+  WEB_SEARCH_API_KEY: process.env.WEB_SEARCH_API_KEY || process.env.TAVILY_API_KEY || undefined,
   FRONTEND_URL,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
