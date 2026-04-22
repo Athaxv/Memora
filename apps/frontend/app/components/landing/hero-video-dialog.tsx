@@ -37,7 +37,7 @@ export function HeroVideoDialog({
       >
         <div className="relative overflow-hidden rounded-[4px] bg-zinc-50">
           <div className="absolute inset-0 z-10 flex items-center justify-center transition-transform duration-500 group-hover:scale-105">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#111118] shadow-md transition-transform duration-300 group-hover:bg-zinc-800">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#09090b] shadow-md transition-transform duration-300 group-hover:bg-zinc-800">
               <Play className="ml-1 h-6 w-6 text-white" fill="currentColor" />
             </div>
           </div>

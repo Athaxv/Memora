@@ -1,34 +1,37 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { motion } from "motion/react";
 
 const roleIcons: Record<string, ReactNode> = {
   RESEARCHER: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
     </svg>
   ),
   WRITER: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
     </svg>
   ),
   FOUNDER: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
     </svg>
   ),
   STUDENT: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
     </svg>
   ),
   INVESTOR: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </svg>
   ),
   DEVELOPER: (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
     </svg>
   ),
@@ -78,15 +81,21 @@ export function LovedByTeamsSection() {
     <section className="relative w-full flex justify-center z-10 bg-transparent py-24 md:py-32">
       <div className="flex w-full max-w-[1200px] flex-col items-center px-6 md:px-10 lg:px-12 relative">
 
-        <div className="text-center relative z-10 max-w-2xl mx-auto mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center relative z-10 max-w-2xl mx-auto mb-16"
+        >
           <h2 className="text-[2.5rem] md:text-[4rem] tracking-tight text-zinc-900 leading-[1.05]">
-            <span className="italic font-serif text-[#111118]">Loved </span>
-            <span className="font-sans font-[700] tracking-tight text-[#111118]">by people who<br/>remember everything</span>
+            <span className="italic font-serif text-[#09090b]">Loved </span>
+            <span className="font-sans font-[700] tracking-tight text-[#09090b]">by people who<br/>remember everything</span>
           </h2>
           <p className="mt-6 text-[1.1rem] text-zinc-600 max-w-[440px] mx-auto font-medium">
             Memora helps individuals and teams organize their knowledge effortlessly.
           </p>
-        </div>
+        </motion.div>
 
         {/* 6-Column Grid with Corner Markers */}
         <div className="relative w-full mt-8 max-w-[1000px]">
@@ -102,15 +111,31 @@ export function LovedByTeamsSection() {
           <div className="absolute -bottom-[1.5rem] -right-[1.5rem] w-3 h-3 border-b-2 border-r-2 border-black" />
 
           {/* Grid Container */}
-          <div className="w-full border-y border-zinc-200/80 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-zinc-200/80 relative">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.1 } }
+            }}
+            className="w-full border-y border-zinc-200/80 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-zinc-200/80 relative"
+          >
              {/* Middle side tick marks */}
              <div className="absolute -left-[1.5rem] top-0 w-2 h-px bg-black hidden md:block" />
              <div className="absolute -right-[1.5rem] top-0 w-2 h-px bg-black hidden md:block" />
 
              {testimonials.map((c, i) => (
-               <div key={i} className="flex-1 p-6 lg:p-8 flex flex-col items-start min-h-[220px]">
+               <motion.div 
+                 key={i} 
+                 variants={{
+                   hidden: { opacity: 0, y: 20 },
+                   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+                 }}
+                 className="flex-1 p-6 lg:p-8 flex flex-col items-start min-h-[220px]"
+               >
                   <div className="h-8 flex items-center gap-2 mb-6">
-                    <div className="w-8 h-8 border border-[#fbbf9b]/50 bg-[#fef2e4]/40 flex items-center justify-center">
+                    <div className="w-8 h-8 border border-[#e4e4e7]/50 bg-[#fafafa]/40 flex items-center justify-center">
                       {roleIcons[c.company] ?? <span className="text-xs font-bold text-zinc-400">{c.company[0]}</span>}
                     </div>
                     <span className="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">{c.company}</span>
@@ -120,22 +145,28 @@ export function LovedByTeamsSection() {
                   <p className="text-[13px] text-zinc-600 leading-relaxed font-medium">
                     &ldquo;{c.quote}&rdquo;
                   </p>
-               </div>
+               </motion.div>
              ))}
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom Cards Row */}
         <div className="w-full max-w-[1000px] mt-16 flex flex-col md:flex-row gap-6 lg:gap-8">
 
            {/* Stats Card */}
-           <div className="w-full md:w-1/3 border border-zinc-200 bg-white/50 p-6 lg:p-8 flex flex-col items-center text-center">
+           <motion.div 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true, margin: "-50px" }}
+             transition={{ duration: 0.6 }}
+             className="w-full md:w-1/3 border border-zinc-200 bg-white/50 p-6 lg:p-8 flex flex-col items-center text-center"
+           >
               <div className="flex flex-col items-center gap-6 mb-8">
                 <div className="text-[3.5rem] font-bold tracking-tighter text-zinc-900 leading-none">10k+</div>
                 <div className="text-[13px] font-medium text-zinc-500">Memories captured daily</div>
                 <div className="w-16 h-px bg-zinc-200" />
                 <div className="text-[3.5rem] font-bold tracking-tighter text-zinc-900 leading-none">4.9</div>
-                <div className="flex items-center gap-0.5 text-[#d97706]">
+                <div className="flex items-center gap-0.5 text-[#18181b]">
                   {[...Array(5)].map((_, i) => (
                     <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   ))}
@@ -145,19 +176,25 @@ export function LovedByTeamsSection() {
 
               <h3 className="font-bold text-xl text-zinc-900 mb-2 tracking-tight">People love Memora</h3>
               <p className="text-[12px] text-zinc-600 font-medium">
-                Join thousands building their second brain. <Link href="/signup" className="text-zinc-900 underline underline-offset-2 decoration-[#fbbf9b] hover:text-[#d97706] transition-colors whitespace-nowrap">Get started free &rarr;</Link>
+                Join thousands building their second brain. <Link href="/signup" className="text-zinc-900 underline underline-offset-2 decoration-[#e4e4e7] hover:text-[#18181b] transition-colors whitespace-nowrap">Get started free &rarr;</Link>
               </p>
-           </div>
+           </motion.div>
 
            {/* Large Testimonial Card */}
-           <div className="w-full md:w-2/3 border border-zinc-200/80 rounded-lg shadow-sm bg-white p-8 lg:p-12 flex flex-col justify-between hover:shadow-md transition-shadow">
+           <motion.div 
+             initial={{ opacity: 0, y: 30 }}
+             whileInView={{ opacity: 1, y: 0 }}
+             viewport={{ once: true, margin: "-50px" }}
+             transition={{ duration: 0.6, delay: 0.1 }}
+             className="w-full md:w-2/3 border border-zinc-200/80 rounded-lg shadow-sm bg-white p-8 lg:p-12 flex flex-col justify-between hover:shadow-md transition-shadow"
+           >
               <div>
-                <div className="relative mb-8 inline-flex h-9 w-9 items-center justify-center border border-[#fbbf9b]/60 bg-[#fef2e4]/60">
-                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
-                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
-                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
-                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-white" />
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <div className="relative mb-8 inline-flex h-9 w-9 items-center justify-center border border-[#e4e4e7]/60 bg-[#fafafa]/60">
+                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-white" />
+                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-white" />
+                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-white" />
+                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-white" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
                     <path d="M9 21h6" />
                   </svg>
@@ -172,7 +209,7 @@ export function LovedByTeamsSection() {
 
               <div className="mt-8 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-zinc-200 shadow-inner overflow-hidden border border-zinc-100 flex items-center justify-center">
-                   <div className="w-full h-full bg-gradient-to-tr from-[#d97706] to-[#fbbf9b] relative"><div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#7c2d12] rounded-t-full"/></div>
+                   <div className="w-full h-full bg-gradient-to-tr from-[#18181b] to-[#e4e4e7] relative"><div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#27272a] rounded-t-full"/></div>
                 </div>
                 <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
                   <span className="text-[12px] font-bold text-zinc-500 tracking-[0.2em]">LOVED BY THINKERS</span>
@@ -180,7 +217,7 @@ export function LovedByTeamsSection() {
                   <span className="text-[13px] text-zinc-500 font-medium tracking-tight">AI Researcher at Stanford</span>
                 </div>
               </div>
-           </div>
+           </motion.div>
 
         </div>
 

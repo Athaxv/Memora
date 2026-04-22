@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "motion/react";
 
 export function Footer() {
   const footerColumns = [
@@ -21,9 +24,15 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative w-full border-t border-zinc-200/80 flex justify-center z-10 bg-transparent">
+    <footer className="relative w-full border-t border-zinc-200/80 flex justify-center z-10 bg-transparent overflow-hidden">
       <div className="flex w-full max-w-[1200px] flex-col px-6 py-16 md:px-10 lg:px-12 relative">
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-x-8 gap-y-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6 }}
+          className="grid grid-cols-2 lg:grid-cols-6 gap-x-8 gap-y-12"
+        >
 
           {/* Brand Column (Left) */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-start gap-4">
@@ -44,7 +53,7 @@ export function Footer() {
           {/* Links Columns */}
           {footerColumns.map((col, idx) => (
             <div key={idx} className="flex flex-col">
-              <h3 className="text-[11px] font-bold tracking-widest text-[#d97706] uppercase mb-5">
+              <h3 className="text-[11px] font-bold tracking-widest text-[#18181b] uppercase mb-5">
                 {col.title}
               </h3>
               <ul className="flex flex-col gap-3">
@@ -61,16 +70,16 @@ export function Footer() {
 
           {/* Status Column (Right) */}
           <div className="col-span-2 lg:col-span-1 flex flex-col items-start lg:items-end mt-4 lg:mt-0">
-             <div className="relative flex items-center gap-2 px-3 py-1.5 border border-[#fbbf9b]/50 text-[10px] font-mono tracking-wider font-bold text-zinc-600 cursor-pointer hover:bg-[#fef2e4]/40 transition-colors">
-                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-                <div className="w-1.5 h-1.5 rounded-full bg-[#d97706] animate-pulse" />
+             <div className="relative flex items-center gap-2 px-3 py-1.5 border border-[#e4e4e7]/50 text-[10px] font-mono tracking-wider font-bold text-zinc-600 cursor-pointer hover:bg-[#fafafa]/40 transition-colors">
+                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-[#fafafa]" />
+                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-[#fafafa]" />
+                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-[#fafafa]" />
+                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#e4e4e7] bg-[#fafafa]" />
+                <div className="w-1.5 h-1.5 rounded-full bg-[#18181b] animate-pulse" />
                 ALL SYSTEMS GO
              </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Bottom Bar */}
         <div className="mt-24 flex flex-col md:flex-row items-center justify-center gap-6 text-[11px] font-bold text-zinc-500">

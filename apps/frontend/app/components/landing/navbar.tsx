@@ -50,7 +50,7 @@ export function Navbar() {
         className={cn(
           "w-full flex justify-center transition-all duration-500 pointer-events-auto",
           scrolled
-            ? "border-b border-[#fbbf9b]/25 bg-[#fef8f0]/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(217,119,6,0.06)]"
+            ? "border-b border-[#e4e4e7]/25 bg-[#ffffff]/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
             : "border-b border-white/10 bg-transparent backdrop-blur-[2px]"
         )}
       >
@@ -64,14 +64,14 @@ export function Navbar() {
           <div
             className={cn(
               "hidden flex-1 items-center gap-7 text-[15px] font-medium transition-colors md:flex",
-              scrolled ? "text-zinc-600" : "text-[#fff5e6]/85"
+              scrolled ? "text-zinc-600" : "text-[#fafafa]/85"
             )}
           >
             <Link
               href="#features"
               className={cn(
                 "group flex items-center transition-colors",
-                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fafafa]"
               )}
             >
               Features
@@ -81,7 +81,7 @@ export function Navbar() {
               href="#use-cases"
               className={cn(
                 "group flex items-center transition-colors",
-                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fafafa]"
               )}
             >
               Use Cases
@@ -91,7 +91,7 @@ export function Navbar() {
               href="#pricing"
               className={cn(
                 "transition-colors",
-                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fafafa]"
               )}
             >
               Pricing
@@ -103,7 +103,7 @@ export function Navbar() {
             <div
               className={cn(
                 "flex items-center gap-1.5 font-bold tracking-tighter text-xl transition-colors",
-                scrolled ? "text-zinc-900" : "text-[#fef2e4] drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+                scrolled ? "text-zinc-900" : "text-[#fafafa] drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
               )}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -123,14 +123,14 @@ export function Navbar() {
           <div
             className={cn(
               "flex flex-1 items-center justify-end gap-7 text-[15px] font-medium transition-colors",
-              scrolled ? "text-zinc-600" : "text-[#fff5e6]/85"
+              scrolled ? "text-zinc-600" : "text-[#fafafa]/85"
             )}
           >
             <Link
               href="#resources"
               className={cn(
                 "group hidden items-center transition-colors lg:flex",
-                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fafafa]"
               )}
             >
               Resources
@@ -140,7 +140,7 @@ export function Navbar() {
               href="/login"
               className={cn(
                 "hidden transition-colors md:block",
-                scrolled ? "hover:text-zinc-950" : "hover:text-[#fef2e4]"
+                scrolled ? "hover:text-zinc-950" : "hover:text-[#fafafa]"
               )}
             >
               Log In
@@ -154,7 +154,7 @@ export function Navbar() {
                   "absolute inset-0 backdrop-blur-sm transition-colors",
                   scrolled
                     ? "border border-zinc-900 bg-zinc-900 group-hover:bg-zinc-800"
-                    : "border border-[#fef2e4]/80 bg-[#fef2e4]/15 group-hover:bg-[#fef2e4]/25"
+                    : "border border-[#fafafa]/80 bg-[#fafafa]/15 group-hover:bg-[#fafafa]/25"
                 )}
               />
 
@@ -162,29 +162,29 @@ export function Navbar() {
               <span
                 className={cn(
                   "absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border transition-colors",
-                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                  scrolled ? "border-[#e4e4e7] bg-[#fafafa]" : "border-[#fafafa] bg-[#fafafa]"
                 )}
               />
               <span
                 className={cn(
                   "absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border transition-colors",
-                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                  scrolled ? "border-[#e4e4e7] bg-[#fafafa]" : "border-[#fafafa] bg-[#fafafa]"
                 )}
               />
               <span
                 className={cn(
                   "absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border transition-colors",
-                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                  scrolled ? "border-[#e4e4e7] bg-[#fafafa]" : "border-[#fafafa] bg-[#fafafa]"
                 )}
               />
               <span
                 className={cn(
                   "absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border transition-colors",
-                  scrolled ? "border-[#fbbf9b] bg-[#fef2e4]" : "border-[#fef2e4] bg-[#fef2e4]"
+                  scrolled ? "border-[#e4e4e7] bg-[#fafafa]" : "border-[#fafafa] bg-[#fafafa]"
                 )}
               />
 
-              <span className={cn("relative z-10 tracking-tight", scrolled ? "text-[#fef2e4]" : "text-[#fef2e4]")}>
+              <span className={cn("relative z-10 tracking-tight", scrolled ? "text-[#fafafa]" : "text-[#fafafa]")}>
                 Get started
               </span>
             </Link>
@@ -194,7 +194,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(!mobileOpen)}
               className={cn(
                 "flex md:hidden items-center justify-center w-9 h-9 transition-colors",
-                scrolled ? "text-zinc-700" : "text-[#fef2e4]"
+                scrolled ? "text-zinc-700" : "text-[#fafafa]"
               )}
               aria-label="Toggle menu"
             >
@@ -225,7 +225,7 @@ export function Navbar() {
             className={cn(
               "flex flex-col gap-1 px-6 pb-6 pt-2 backdrop-blur-md border-t",
               scrolled
-                ? "bg-[#fdfdfd]/95 border-zinc-100"
+                ? "bg-[#ffffff]/95 border-zinc-100"
                 : "bg-zinc-950/70 border-white/10"
             )}
           >
@@ -236,7 +236,7 @@ export function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "py-3 text-[15px] font-medium transition-colors",
-                  scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fff5e6]/85 hover:text-[#fef2e4]"
+                  scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fafafa]/85 hover:text-[#fafafa]"
                 )}
               >
                 {label}
@@ -248,7 +248,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 "py-3 text-[15px] font-medium transition-colors",
-                scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fff5e6]/85 hover:text-[#fef2e4]"
+                scrolled ? "text-zinc-600 hover:text-zinc-900" : "text-[#fafafa]/85 hover:text-[#fafafa]"
               )}
             >
               Log In
@@ -260,7 +260,7 @@ export function Navbar() {
                 "mt-2 inline-flex items-center justify-center border px-5 py-2.5 text-[15px] font-bold transition-colors",
                 scrolled
                   ? "border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800"
-                  : "border-[#fef2e4] bg-[#fef2e4]/15 text-[#fef2e4] hover:bg-[#fef2e4]/25"
+                  : "border-[#fafafa] bg-[#fafafa]/15 text-[#fafafa] hover:bg-[#fafafa]/25"
               )}
             >
               Get started

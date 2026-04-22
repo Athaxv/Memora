@@ -35,7 +35,7 @@ export const SocialBookmarksVisual = () => {
         {/* Readwise node */}
         <div className="absolute right-[5%] top-[25%] z-20">
           <div className="bg-white border border-amber-200 rounded px-2 py-1 shadow-sm flex items-center gap-1">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /></svg>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#18181b" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /></svg>
             <span className="text-[7px] font-bold text-amber-600">Readwise</span>
           </div>
         </div>
@@ -60,7 +60,7 @@ export const SocialBookmarksVisual = () => {
 
           {/* Readwise → center */}
           <path d="M 255 45 Q 200 55 150 80" fill="none" stroke="#e5e7eb" strokeWidth="1.5" />
-          <path d="M 255 45 Q 200 55 150 80" fill="none" stroke="#d97706" strokeWidth="2.5" strokeDasharray="8 100" strokeDashoffset={-(Math.max(0, loopFrame - 40) * 1.3) % 108} />
+          <path d="M 255 45 Q 200 55 150 80" fill="none" stroke="#18181b" strokeWidth="2.5" strokeDasharray="8 100" strokeDashoffset={-(Math.max(0, loopFrame - 40) * 1.3) % 108} />
         </svg>
       </div>
     </AbsoluteFill>

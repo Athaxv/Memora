@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 const faqs = [
   {
@@ -45,19 +46,41 @@ export function FaqSection() {
         <div className="absolute left-0 right-0 top-0 h-px border-t border-dashed border-zinc-200/80 pointer-events-none hidden lg:block z-0" />
 
         <div className="w-full max-w-3xl relative z-10">
-          <div className="text-center mb-12">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d97706] mb-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#18181b] mb-3">
               Got questions?
             </p>
             <h2 className="text-[2rem] md:text-[3rem] font-bold text-zinc-900 tracking-tight">
-              <span className="italic font-serif text-[#111118]">Frequently </span>
+              <span className="italic font-serif text-[#09090b]">Frequently </span>
               <span className="font-sans">asked</span>
             </h2>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col border-t border-zinc-200">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.1 } }
+            }}
+            className="flex flex-col border-t border-zinc-200"
+          >
             {faqs.map((faq, index) => (
-              <div key={index} className="border-b border-zinc-200">
+              <motion.div 
+                key={index} 
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+                }}
+                className="border-b border-zinc-200"
+              >
                 <button
                   onClick={() => toggleFaq(index)}
                   className="w-full flex items-center justify-between py-5 text-left transition-colors hover:bg-zinc-50/50"
@@ -82,12 +105,12 @@ export function FaqSection() {
                     {faq.answer}
                   </p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           <div className="mt-12 text-center text-[13px] font-medium text-zinc-600">
-             Can&rsquo;t find your answer here? <Link href="/contact" className="text-[#d97706] underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors">Get in touch</Link>.
+             Can&rsquo;t find your answer here? <Link href="/contact" className="text-[#18181b] underline underline-offset-4 decoration-[#e4e4e7] hover:decoration-[#18181b] transition-colors">Get in touch</Link>.
           </div>
         </div>
       </div>
