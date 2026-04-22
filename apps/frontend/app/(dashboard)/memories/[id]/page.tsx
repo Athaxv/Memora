@@ -33,10 +33,10 @@ interface MemoryDetail {
 function CornerAccents() {
   return (
     <>
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
     </>
   );
 }
@@ -66,15 +66,15 @@ export default function MemoryDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
-        <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
+      <div className="flex h-full items-center justify-center bg-white">
+        <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
       </div>
     );
   }
 
   if (!memory) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+      <div className="flex h-full items-center justify-center bg-white">
         <span className="text-[13px] font-medium text-zinc-400">Memory not found</span>
       </div>
     );
@@ -83,14 +83,14 @@ export default function MemoryDetailPage() {
   const date = new Date(memory.createdAt);
 
   return (
-    <div className="flex h-full flex-col bg-[#fef8f0]">
+    <div className="flex h-full flex-col bg-white">
       <main className="flex-1 px-6 py-8 overflow-auto">
         <div className="mx-auto max-w-[720px] space-y-6">
           {/* Top bar */}
           <div className="flex items-center justify-between">
             <Link
               href="/vault"
-              className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-zinc-400 hover:text-[#d97706] transition-colors"
+              className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest text-zinc-400 hover:text-zinc-900 transition-colors"
             >
               <ArrowLeft size={14} strokeWidth={1.5} />
               Back to vault
@@ -109,7 +109,7 @@ export default function MemoryDetailPage() {
             <CornerAccents />
 
             <div className="flex items-center gap-2 mb-4">
-              <span className="border border-[#fbbf9b]/50 bg-[#fef2e4] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-[#d97706]">
+              <span className="border border-zinc-200 bg-white px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-zinc-900">
                 {memory.type}
               </span>
               {memory.source && (
@@ -135,7 +135,7 @@ export default function MemoryDetailPage() {
                 href={memory.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 block truncate text-[13px] font-medium text-[#d97706] underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
+                className="mt-3 block truncate text-[13px] font-medium text-zinc-900 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors"
               >
                 {memory.sourceUrl}
               </a>
@@ -146,7 +146,7 @@ export default function MemoryDetailPage() {
           {memory.summary && (
             <div className="relative border border-zinc-200/80 bg-white p-8">
               <CornerAccents />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-3">
                 AI Summary
               </h3>
               <p className="text-[14px] text-zinc-700 leading-relaxed font-medium">
@@ -159,7 +159,7 @@ export default function MemoryDetailPage() {
           {memory.content && (
             <div className="relative border border-zinc-200/80 bg-white p-8">
               <CornerAccents />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-3">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-3">
                 Content
               </h3>
               <pre className="whitespace-pre-wrap text-[13px] text-zinc-600 leading-relaxed font-sans">
@@ -172,7 +172,7 @@ export default function MemoryDetailPage() {
           {memory.tags.length > 0 && (
             <div className="relative border border-zinc-200/80 bg-white p-8">
               <CornerAccents />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-4">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-4">
                 Tags
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -181,8 +181,8 @@ export default function MemoryDetailPage() {
                     key={tag.id}
                     className={`border px-2.5 py-1 text-[11px] font-bold ${
                       tag.isAi
-                        ? "border-[#fbbf9b]/60 bg-[#fef2e4] text-[#d97706]"
-                        : "border-zinc-200 bg-[#fef8f0] text-zinc-600"
+                        ? "border-zinc-200 bg-white text-zinc-900"
+                        : "border-zinc-200 bg-white text-zinc-600"
                     }`}
                   >
                     {tag.name}
@@ -197,7 +197,7 @@ export default function MemoryDetailPage() {
           {memory.related.length > 0 && (
             <div className="relative border border-zinc-200/80 bg-white p-8">
               <CornerAccents />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-4">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-4">
                 Connected memories
               </h3>
               <div className="divide-y divide-dashed divide-[#fbbf9b]/25">
@@ -205,9 +205,9 @@ export default function MemoryDetailPage() {
                   <Link
                     key={r.node.id}
                     href={`/memories/${r.node.id}`}
-                    className="group flex items-center gap-4 py-3 px-1 transition-all hover:bg-[#fef2e4]/50 hover:px-2"
+                    className="group flex items-center gap-4 py-3 px-1 transition-all hover:bg-white/50 hover:px-2"
                   >
-                    <span className="shrink-0 border border-[#fbbf9b]/50 bg-[#fef2e4] px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#d97706]">
+                    <span className="shrink-0 border border-zinc-200 bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-zinc-900">
                       {r.node.type}
                     </span>
                     <div className="flex-1 min-w-0">
@@ -220,7 +220,7 @@ export default function MemoryDetailPage() {
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-[#d97706]">
+                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-zinc-900">
                       {(r.weight * 100).toFixed(0)}%
                     </span>
                   </Link>

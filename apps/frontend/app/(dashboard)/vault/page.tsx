@@ -83,21 +83,21 @@ export default function VaultPage() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fef8f0]">
-      <main className="flex-1 px-6">
+    <div className="flex h-full flex-col bg-white">
+      <main className="flex-1 px-4 md:px-6 py-4 md:py-0">
         <VaultSearchBar onSave={handleSave} onSearch={handleSearch} />
 
         {/* Saving indicator */}
         {savingUrl && (
-          <div className="relative mx-auto mb-6 flex max-w-[640px] items-center gap-3 border border-[#fbbf9b]/40 bg-white px-5 py-3">
-            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+          <div className="relative mx-auto mb-6 flex max-w-[640px] items-center gap-3 border border-zinc-200 bg-white px-5 py-3">
+            <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+            <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+            <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+            <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
             <div className="flex gap-1">
-              <div className="h-1 w-1 bg-[#d97706] animate-pulse" />
-              <div className="h-1 w-1 bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
-              <div className="h-1 w-1 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+              <div className="h-1 w-1 bg-zinc-900 animate-pulse" />
+              <div className="h-1 w-1 bg-zinc-400 animate-pulse [animation-delay:150ms]" />
+              <div className="h-1 w-1 bg-zinc-200 animate-pulse [animation-delay:300ms]" />
             </div>
             <span className="text-[13px] font-medium text-zinc-600">
               Saving and processing with AI...
@@ -108,7 +108,7 @@ export default function VaultPage() {
         {/* Search mode header */}
         {searchMode && !savingUrl && (
           <div className="mx-auto mb-4 flex max-w-[640px] items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706]">
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900">
               Search results
             </span>
             <button
@@ -116,7 +116,7 @@ export default function VaultPage() {
                 setSearchMode(false);
                 fetchMemories();
               }}
-              className="text-[12px] font-bold text-zinc-500 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] hover:text-[#d97706] transition-colors"
+              className="text-[12px] font-bold text-zinc-500 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 hover:text-zinc-900 transition-colors"
             >
               Clear
             </button>

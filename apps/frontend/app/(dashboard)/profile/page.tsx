@@ -6,9 +6,9 @@ import {
   Pencil,
   Check,
   X,
-  Github,
-  Linkedin,
-  Twitter,
+  Code2,
+  Briefcase,
+  MessageCircle,
   Globe,
   FileText,
   Upload,
@@ -44,19 +44,19 @@ interface Stats {
 }
 
 const socialFields = [
-  { key: "github" as const, label: "GitHub", icon: Github },
-  { key: "linkedin" as const, label: "LinkedIn", icon: Linkedin },
-  { key: "twitter" as const, label: "Twitter / X", icon: Twitter },
+  { key: "github" as const, label: "GitHub", icon: Code2 },
+  { key: "linkedin" as const, label: "LinkedIn", icon: Briefcase },
+  { key: "twitter" as const, label: "Twitter / X", icon: MessageCircle },
   { key: "portfolio" as const, label: "Portfolio", icon: Globe },
 ];
 
 function CornerAccents() {
   return (
     <>
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
     </>
   );
 }
@@ -77,6 +77,19 @@ export default function ProfilePage() {
   // Resume upload
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function readErrorMessage(res: Response): Promise<string> {
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.error === "string") {
+        return data.error;
+      }
+    }
+
+    const text = await res.text().catch(() => "");
+    return text || "Failed to upload resume";
+  }
 
   useEffect(() => {
     Promise.all([
@@ -131,10 +144,16 @@ export default function ProfilePage() {
     const res = await api("/ingest/upload", { method: "POST", body: formData });
     if (res.ok) {
       const data = await res.json();
-      await api("/auth/me", {
+      const profileRes = await api("/auth/me", {
         method: "PATCH",
         body: JSON.stringify({ resumeNodeId: data.nodeId }),
       });
+
+      if (!profileRes.ok) {
+        const message = await readErrorMessage(profileRes);
+        alert(message);
+      }
+
       setUser((prev) =>
         prev
           ? {
@@ -144,6 +163,9 @@ export default function ProfilePage() {
             }
           : prev
       );
+    } else {
+      const message = await readErrorMessage(res);
+      alert(message);
     }
     setUploading(false);
     if (fileRef.current) fileRef.current.value = "";
@@ -151,26 +173,26 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+      <div className="flex h-full items-center justify-center bg-white">
         <div className="flex gap-1.5">
-          <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
-          <div className="h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
-          <div className="h-1.5 w-1.5 border border-[#fbbf9b]/50 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+          <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
+          <div className="h-1.5 w-1.5 border border-zinc-200 bg-zinc-400 animate-pulse [animation-delay:150ms]" />
+          <div className="h-1.5 w-1.5 border border-zinc-200 bg-white animate-pulse [animation-delay:300ms]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fef8f0]">
-      <main className="flex-1 px-6 py-8 overflow-auto">
+    <div className="flex h-full flex-col bg-white">
+      <main className="flex-1 px-4 md:px-6 py-6 md:py-8 overflow-auto">
         <div className="mx-auto max-w-[640px] space-y-6">
-          <h1 className="text-[13px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-6">
+          <h1 className="text-[13px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-6">
             Profile
           </h1>
 
           {/* Section 1: Profile Header */}
-          <div className="relative border border-zinc-200/80 bg-white p-8">
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
             <CornerAccents />
 
             <div className="flex items-start gap-6">
@@ -195,24 +217,24 @@ export default function ProfilePage() {
                         if (e.key === "Enter") saveName();
                         if (e.key === "Escape") setEditingName(false);
                       }}
-                      className="flex-1 border border-zinc-200 bg-[#fef8f0] px-3 py-1.5 text-[1.25rem] font-bold text-[#111118] outline-none focus:border-[#fbbf9b]"
+                      className="flex-1 border border-zinc-200 bg-white px-3 py-1.5 text-[1.25rem] font-bold text-[#111118] outline-none focus:border-zinc-200"
                     />
                     <button
                       onClick={saveName}
-                      className="p-1.5 text-[#d97706] hover:bg-[#fef2e4] transition-colors"
+                      className="p-1.5 text-zinc-900 hover:bg-white transition-colors"
                     >
                       <Check size={16} strokeWidth={2} />
                     </button>
                     <button
                       onClick={() => setEditingName(false)}
-                      className="p-1.5 text-zinc-400 hover:bg-[#fef8f0] transition-colors"
+                      className="p-1.5 text-zinc-400 hover:bg-white transition-colors"
                     >
                       <X size={16} strokeWidth={2} />
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <h2 className="text-[1.5rem] font-bold text-[#111118] tracking-tight truncate">
+                    <h2 className="text-[1.25rem] md:text-[1.5rem] font-bold text-[#111118] tracking-tight truncate">
                       {user.name || "Unnamed"}
                     </h2>
                     <button
@@ -234,24 +256,24 @@ export default function ProfilePage() {
           </div>
 
           {/* Section 2: Social Links */}
-          <div className="relative border border-zinc-200/80 bg-white p-8">
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
             <CornerAccents />
 
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706]">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900">
                 Social Links
               </h3>
               {editingSocial ? (
                 <div className="flex items-center gap-1">
                   <button
                     onClick={saveSocialLinks}
-                    className="px-3 py-1 text-[12px] font-bold text-[#d97706] hover:bg-[#fef2e4] transition-colors"
+                    className="px-3 py-1 text-[12px] font-bold text-zinc-900 hover:bg-white transition-colors"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setEditingSocial(false)}
-                    className="px-3 py-1 text-[12px] font-bold text-zinc-400 hover:bg-[#fef8f0] transition-colors"
+                    className="px-3 py-1 text-[12px] font-bold text-zinc-400 hover:bg-white transition-colors"
                   >
                     Cancel
                   </button>
@@ -283,7 +305,7 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setSocialDraft((prev) => ({ ...prev, [key]: e.target.value }))
                       }
-                      className="flex-1 border border-zinc-200 bg-[#fef8f0] px-3 py-1.5 text-[13px] text-zinc-900 placeholder-zinc-400 outline-none focus:border-[#fbbf9b]"
+                      className="flex-1 border border-zinc-200 bg-white px-3 py-1.5 text-[13px] text-zinc-900 placeholder-zinc-400 outline-none focus:border-zinc-200"
                       placeholder={`https://...`}
                     />
                   ) : user.socialLinks?.[key] ? (
@@ -291,7 +313,7 @@ export default function ProfilePage() {
                       href={user.socialLinks[key]}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 truncate text-[13px] font-medium text-zinc-700 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
+                      className="flex-1 truncate text-[13px] font-medium text-zinc-700 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors"
                     >
                       {user.socialLinks[key]}
                     </a>
@@ -304,17 +326,17 @@ export default function ProfilePage() {
           </div>
 
           {/* Section 3: Resume */}
-          <div className="relative border border-zinc-200/80 bg-white p-8">
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
             <CornerAccents />
 
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-5">
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-5">
               Resume
             </h3>
 
             <input
               ref={fileRef}
               type="file"
-              accept=".pdf,.txt,.md,.csv"
+              accept=".pdf,.txt,.md,.csv,.docx"
               onChange={handleResumeUpload}
               className="hidden"
             />
@@ -325,7 +347,7 @@ export default function ProfilePage() {
                   <FileText size={18} strokeWidth={1.5} className="shrink-0 text-zinc-500" />
                   <Link
                     href={`/memories/${user.resumeNode.id}`}
-                    className="truncate text-[14px] font-medium text-zinc-700 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors"
+                    className="truncate text-[14px] font-medium text-zinc-700 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors"
                   >
                     {user.resumeNode.title || "Resume"}
                   </Link>
@@ -342,7 +364,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
-                className="flex w-full items-center justify-center gap-2 border border-dashed border-[#fbbf9b]/60 bg-[#fef8f0] px-4 py-6 text-[#d97706] hover:border-[#d97706] hover:text-[#b45309] transition-colors disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 border border-dashed border-zinc-200 bg-white px-4 py-6 text-zinc-900 hover:border-zinc-300 hover:text-zinc-600 transition-colors disabled:opacity-50"
               >
                 <Upload size={16} strokeWidth={1.5} />
                 <span className="text-[13px] font-medium">
@@ -354,16 +376,16 @@ export default function ProfilePage() {
 
           {/* Section 4: Account Stats */}
           {stats && (
-            <div className="relative border border-zinc-200/80 bg-white p-8">
+            <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
               <CornerAccents />
 
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#d97706] mb-5">
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-5">
                 Account
               </h3>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <p className="text-[2rem] font-bold text-[#111118] leading-none">
+                  <p className="text-[1.5rem] md:text-[2rem] font-bold text-[#111118] leading-none">
                     {stats.memoriesCount}
                   </p>
                   <p className="mt-2 text-[12px] font-bold uppercase tracking-widest text-zinc-500">
@@ -371,7 +393,7 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[2rem] font-bold text-[#111118] leading-none">
+                  <p className="text-[1.5rem] md:text-[2rem] font-bold text-[#111118] leading-none">
                     {new Date(stats.memberSince).toLocaleDateString("en-US", {
                       month: "short",
                       year: "numeric",

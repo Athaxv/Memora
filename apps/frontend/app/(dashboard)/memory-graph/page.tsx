@@ -68,10 +68,10 @@ type RootNodeData = {
 type FlowNodeData = MemoryNodeData | RootNodeData;
 
 const EDGE_COLORS: Record<GraphEdge["type"], string> = {
-  root: "#a16207",
-  semantic: "#d97706",
-  tag: "#0f766e",
-  temporal: "#1d4ed8",
+  root: "#7c3aed",
+  semantic: "#a855f7",
+  tag: "#6366f1",
+  temporal: "#3b82f6",
 };
 
 const EDGE_LABELS: Record<GraphEdge["type"], string> = {
@@ -91,12 +91,12 @@ function RootNode({ data }: NodeProps<Node<RootNodeData>>) {
     <div
       className={`w-80 rounded-xl border px-4 py-4 shadow-[0_10px_30px_rgba(9,9,11,0.08)] transition-all ${
         data.active
-          ? "border-[#d97706] bg-[#fff7ed]"
+          ? "border-zinc-900 bg-zinc-50"
           : "border-zinc-300 bg-white"
       } ${data.dimmed ? "opacity-35" : "opacity-100"}`}
     >
-      <Handle type="source" position={Position.Bottom} className="h-2 w-2 bg-[#d97706]" />
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d97706]">Root Node</p>
+      <Handle type="source" position={Position.Bottom} className="h-2 w-2 bg-zinc-900" />
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-900">Root Node</p>
       <h2 className="mt-1 text-[18px] font-black tracking-tight text-zinc-900">{data.title}</h2>
       <p className="mt-1 text-[12px] text-zinc-600">{data.subtitle}</p>
       <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
@@ -118,7 +118,7 @@ function MemoryCardNode({ data }: NodeProps<Node<MemoryNodeData>>) {
     <div
       className={`w-72 rounded-xl border px-3.5 py-3 shadow-[0_8px_20px_rgba(9,9,11,0.08)] transition-all ${
         data.active
-          ? "border-[#d97706] bg-white shadow-[0_12px_30px_rgba(217,119,6,0.22)]"
+          ? "border-zinc-900 bg-white shadow-[0_12px_30px_rgba(124,58,237,0.15)]"
           : "border-zinc-300 bg-white"
       } ${data.dimmed ? "opacity-35" : "opacity-100"}`}
     >
@@ -132,7 +132,7 @@ function MemoryCardNode({ data }: NodeProps<Node<MemoryNodeData>>) {
           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-200">
             {data.source}
           </span>
-          <span className="rounded bg-[#d97706] px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-white">
+          <span className="rounded bg-zinc-900 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-white">
             {Math.round(data.importance * 100)}
           </span>
         </div>
@@ -142,7 +142,7 @@ function MemoryCardNode({ data }: NodeProps<Node<MemoryNodeData>>) {
         <p className="line-clamp-2 text-[14px] font-black leading-tight text-zinc-900">
           {data.summary || "Untitled memory"}
         </p>
-        <span className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[#d97706]" />
+        <span className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full bg-zinc-900" />
       </div>
 
       <p className="mb-3 line-clamp-3 text-[12px] leading-relaxed text-zinc-600">{data.content}</p>
@@ -151,7 +151,7 @@ function MemoryCardNode({ data }: NodeProps<Node<MemoryNodeData>>) {
         {data.tags.slice(0, 4).map((tag) => (
           <span
             key={tag}
-            className="rounded-md border border-[#fdba74]/60 bg-[#fff7ed] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9a3412]"
+            className="rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-700"
           >
             {tag}
           </span>
@@ -474,18 +474,18 @@ export default function MemoryGraphPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-[#fef8f0]">
+      <div className="flex h-full items-center justify-center bg-white">
         <div className="flex gap-1.5">
-          <div className="h-1.5 w-1.5 border border-[#d97706] bg-[#d97706] animate-pulse" />
-          <div className="h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fbbf9b] animate-pulse [animation-delay:150ms]" />
-          <div className="h-1.5 w-1.5 border border-[#fbbf9b]/50 bg-[#fef2e4] animate-pulse [animation-delay:300ms]" />
+          <div className="h-1.5 w-1.5 border border-zinc-900 bg-zinc-900 animate-pulse" />
+          <div className="h-1.5 w-1.5 border border-zinc-200 bg-zinc-400 animate-pulse [animation-delay:150ms]" />
+          <div className="h-1.5 w-1.5 border border-zinc-200 bg-white animate-pulse [animation-delay:300ms]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col bg-[#fef8f0] p-5">
+    <div className="flex h-full flex-col bg-white p-5">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-[16px] font-bold tracking-tight text-zinc-900">Memory Graph</h1>
         <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
@@ -493,11 +493,11 @@ export default function MemoryGraphPage() {
         </span>
 
         <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[#d97706]" />
+          <span className="h-2 w-2 rounded-full bg-[#a855f7]" />
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">Semantic</span>
-          <span className="h-2 w-2 rounded-full bg-[#0f766e]" />
+          <span className="h-2 w-2 rounded-full bg-[#6366f1]" />
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">Tag</span>
-          <span className="h-2 w-2 rounded-full bg-[#1d4ed8]" />
+          <span className="h-2 w-2 rounded-full bg-[#3b82f6]" />
           <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">Temporal</span>
         </div>
 
@@ -513,7 +513,7 @@ export default function MemoryGraphPage() {
             className="inline-flex h-9 w-9 items-center justify-center border border-zinc-300 bg-white text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {reloading ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#fbbf9b] border-t-[#d97706]" />
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-[#7c3aed]" />
             ) : (
               <svg
                 width="14"
@@ -557,7 +557,7 @@ export default function MemoryGraphPage() {
           {error}
         </div>
       ) : (
-        <div className="relative flex-1 overflow-hidden rounded-xl border border-[#d6d3d1] bg-[radial-gradient(circle_at_top,#fff7ed_0,#ffffff_38%,#fff7ed_100%)]">
+        <div className="relative flex-1 overflow-hidden rounded-xl border border-[#d6d3d1] bg-[radial-gradient(circle_at_top,#f4f4f5_0,#ffffff_38%,#f4f4f5_100%)]">
           <ReactFlow
             fitView
             nodes={flowNodes}
@@ -584,9 +584,9 @@ export default function MemoryGraphPage() {
               className="border border-zinc-300 bg-white"
               nodeColor={(node) =>
                 node.data?.kind === "root"
-                  ? "#f59e0b"
+                  ? "#a855f7"
                   : node.id === activeNodeId
-                    ? "#d97706"
+                    ? "#7c3aed"
                     : "#d4d4d8"
               }
             />
