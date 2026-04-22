@@ -1,0 +1,17 @@
+{
+  "extends": "../typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "dist",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@repo/ai": ["../ai/src/index.ts"],
+      "@repo/ai/*": ["../ai/src/*"],
+      "@repo/db": ["../db/src/index.ts"],
+      "@repo/db/*": ["../db/src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
