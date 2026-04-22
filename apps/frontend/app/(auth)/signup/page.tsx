@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { api, API_URL } from "@/lib/api";
+import { motion } from "motion/react";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -39,14 +40,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="relative border border-zinc-200/80 bg-white p-10 md:p-12">
-      {/* Corner squares */}
-      <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
-      <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-[#fbbf9b] bg-[#fef2e4]" />
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="relative w-full"
+    >
 
-      <h1 className="text-[1.75rem] font-bold leading-[1.1] text-[#111118] tracking-tight">
+      <h1 className="text-[2.25rem] font-serif italic leading-[1] text-zinc-900 tracking-tight">
         Create account
       </h1>
       <p className="mt-2 mb-8 text-[14px] text-zinc-500 font-medium">
@@ -55,7 +56,7 @@ export default function SignUpPage() {
 
       <button
         onClick={() => { window.location.href = `${API_URL}/auth/google`; }}
-        className="mb-5 flex w-full items-center justify-center gap-2.5 border border-zinc-200 bg-[#fdfdfd] px-4 py-3 text-[14px] font-medium text-zinc-700 transition-colors hover:bg-[#fef8f0]"
+        className="mb-5 flex w-full items-center justify-center gap-2.5 border border-zinc-200 bg-[#fdfdfd] px-4 py-3 text-[14px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -94,7 +95,7 @@ export default function SignUpPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
             placeholder="Your name"
           />
         </div>
@@ -109,7 +110,7 @@ export default function SignUpPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
             placeholder="you@example.com"
           />
         </div>
@@ -125,7 +126,7 @@ export default function SignUpPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-[#fbbf9b]"
+            className="w-full border border-zinc-200 bg-[#fdfdfd] px-4 py-2.5 text-[14px] text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-400"
             placeholder="Min 8 characters"
           />
         </div>
@@ -148,10 +149,10 @@ export default function SignUpPage() {
 
       <p className="mt-6 text-center text-[13px] font-medium text-zinc-500">
         Already have an account?{" "}
-        <Link href="/login" className="text-zinc-900 underline underline-offset-4 decoration-[#fbbf9b] hover:decoration-[#d97706] transition-colors">
+        <Link href="/login" className="text-zinc-900 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 transition-colors">
           Sign in
         </Link>
       </p>
-    </div>
+    </motion.div>
   );
 }
