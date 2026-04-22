@@ -1,3 +1,4 @@
+/// <reference path="../types/pdf-parse-lib.d.ts" />
 import type { ExtractedContent } from "../types";
 import OpenAI from "openai";
 
@@ -11,6 +12,10 @@ export async function extractFile(
     return extractPdf(buffer, fileName);
   }
 
+  if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    return extractDocx(buffer, fileName);
+  }
+
   if (mimeType.startsWith("image/")) {
     return extractImage(buffer, mimeType, fileName, groqApiKey);
   }
@@ -21,16 +26,35 @@ export async function extractFile(
   return { title, content: content.slice(0, 50000) };
 }
 
+async function extractDocx(
+  buffer: Buffer,
+  fileName: string
+): Promise<ExtractedContent> {
+  const mammothModule = await import("mammoth");
+  const mammoth = mammothModule.default ?? mammothModule;
+  const result = await mammoth.extractRawText({ buffer });
+
+  const title = fileName.replace(/\.docx$/i, "") || "Untitled Document";
+  const content = (result.value || "").slice(0, 50000);
+
+  return { title, content };
+}
+
 async function extractPdf(
   buffer: Buffer,
   fileName: string
 ): Promise<ExtractedContent> {
-  const pdfParseModule = await import("pdf-parse");
+  // Avoid pdf-parse package root side effects under tsx/bun where module.parent
+  // can be undefined and trigger debug test-file reads.
+  const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
   const pdfParse = pdfParseModule.default ?? pdfParseModule;
   const data = await pdfParse(buffer);
 
+  const pdfTitle = data.info?.["Title"];
   const title =
-    data.info?.Title || fileName.replace(/\.pdf$/i, "") || "Untitled PDF";
+    (typeof pdfTitle === "string" && pdfTitle.trim().length > 0
+      ? pdfTitle
+      : undefined) || fileName.replace(/\.pdf$/i, "") || "Untitled PDF";
   const content = (data.text as string).slice(0, 50000);
 
   return { title, content };
