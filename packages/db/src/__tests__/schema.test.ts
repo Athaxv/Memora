@@ -10,9 +10,19 @@ import {
   verificationTokens,
   conversations,
   messages,
+  artifacts,
+  memoryRecords,
+  memoryEvidence,
+  memoryEdges,
+  conversationState,
   nodeTypeEnum,
   edgeTypeEnum,
   messageRoleEnum,
+  artifactTypeEnum,
+  memoryTierEnum,
+  memoryKindEnum,
+  memoryStatusEnum,
+  memoryRelationTypeEnum,
 } from "../schema/index";
 import { getTableConfig } from "drizzle-orm/pg-core";
 
@@ -79,6 +89,36 @@ describe("Schema exports", () => {
     const config = getTableConfig(messages);
     expect(config.name).toBe("messages");
   });
+
+  it("exports the artifacts table", () => {
+    expect(artifacts).toBeDefined();
+    const config = getTableConfig(artifacts);
+    expect(config.name).toBe("artifacts");
+  });
+
+  it("exports the memoryRecords table", () => {
+    expect(memoryRecords).toBeDefined();
+    const config = getTableConfig(memoryRecords);
+    expect(config.name).toBe("memory_records");
+  });
+
+  it("exports the memoryEvidence table", () => {
+    expect(memoryEvidence).toBeDefined();
+    const config = getTableConfig(memoryEvidence);
+    expect(config.name).toBe("memory_evidence");
+  });
+
+  it("exports the memoryEdges table", () => {
+    expect(memoryEdges).toBeDefined();
+    const config = getTableConfig(memoryEdges);
+    expect(config.name).toBe("memory_edges");
+  });
+
+  it("exports the conversationState table", () => {
+    expect(conversationState).toBeDefined();
+    const config = getTableConfig(conversationState);
+    expect(config.name).toBe("conversation_state");
+  });
 });
 
 // ----------------------------------------------------------------
@@ -135,6 +175,54 @@ describe("message_role enum", () => {
     expect(values).toContain("assistant");
     expect(values).toContain("system");
     expect(values).toHaveLength(3);
+  });
+});
+
+describe("artifact_type enum", () => {
+  it("is exported", () => {
+    expect(artifactTypeEnum).toBeDefined();
+  });
+
+  it("includes expected artifact types", () => {
+    const values = artifactTypeEnum.enumValues;
+    expect(values).toContain("chat_turn");
+    expect(values).toContain("message");
+    expect(values).toContain("note");
+  });
+});
+
+describe("memory enums", () => {
+  it("exports memory_tier values", () => {
+    expect(memoryTierEnum.enumValues).toEqual(
+      expect.arrayContaining(["short_term", "long_term", "personality"])
+    );
+  });
+
+  it("exports memory_kind values", () => {
+    expect(memoryKindEnum.enumValues).toEqual(
+      expect.arrayContaining([
+        "fact",
+        "preference",
+        "identity",
+        "relationship",
+        "goal",
+        "project",
+        "event",
+        "constraint",
+      ])
+    );
+  });
+
+  it("exports memory_status values", () => {
+    expect(memoryStatusEnum.enumValues).toEqual(
+      expect.arrayContaining(["active", "superseded", "rejected"])
+    );
+  });
+
+  it("exports memory_relation_type values", () => {
+    expect(memoryRelationTypeEnum.enumValues).toEqual(
+      expect.arrayContaining(["semantic", "contradiction", "supersedes", "derived"])
+    );
   });
 });
 

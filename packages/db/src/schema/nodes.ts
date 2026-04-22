@@ -8,23 +8,8 @@ import {
   index,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { customType } from "drizzle-orm/pg-core";
 import { users } from "./users";
-
-const vector = customType<{ data: number[]; driverParam: string }>({
-  dataType() {
-    return "vector(768)";
-  },
-  toDriver(value: number[]) {
-    return JSON.stringify(value);
-  },
-  fromDriver(value: unknown) {
-    if (typeof value === "string") {
-      return JSON.parse(value) as number[];
-    }
-    return value as number[];
-  },
-});
+import { vector } from "./vector";
 
 export const nodeTypeEnum = pgEnum("node_type", [
   "link",
