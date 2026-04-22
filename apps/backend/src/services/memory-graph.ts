@@ -1,6 +1,16 @@
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
 import { conversations, edges, messages, nodeTags, nodes, tags } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
+import { generateEmbedding } from "@repo/ai/embeddings";
+import { extractMemoryCandidates, type MemoryCandidate } from "@repo/memory";
+import {
+  createNode as graphCreateNode,
+  listNodes,
+  semanticSearch,
+  updateNode as graphUpdateNode,
+  type Node as GraphNode,
+} from "@repo/graph";
+import { canWriteMemory, isDurableMemoryText } from "./memory-policy";
 
 export interface MemoryGraphNode {
   id: string;
@@ -455,5 +465,287 @@ export async function getMemoryGraph(
   return {
     nodes: [...rootNodes, ...memoryNodes],
     edges: [...rootEdges, ...selected],
+  };
+}
+
+export interface StructuredMemory {
+  id: string;
+  type: "goal" | "preference" | "fact" | "behavior";
+  entity: string;
+  content: string;
+  importance: number;
+  createdAt: string;
+  isDurable: boolean;
+}
+
+interface GraphMutationDeps {
+  db: Database;
+  userId: string;
+  hfApiKey?: string;
+}
+
+interface MemoryExtractionParams extends GraphMutationDeps {
+  groqApiKey: string;
+  userMessage: string;
+  assistantMessage?: string;
+  explicitStore?: boolean;
+  history?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+  isMemoryQuery?: boolean;
+  intent?: string;
+  extractionConfidence?: number;
+}
+
+interface GraphMutationOutcome {
+  action: "CREATE" | "UPDATE" | "LINK" | "SKIP";
+  nodeId: string;
+  linkedToNodeId?: string;
+  similarity?: number;
+}
+
+function inferMemoryType(kind: string): StructuredMemory["type"] {
+  if (kind === "goal" || kind === "project") return "goal";
+  if (kind === "preference") return "preference";
+  if (kind === "identity" || kind === "relationship") return "behavior";
+  return "fact";
+}
+
+function extractEntity(candidate: MemoryCandidate): string {
+  const payloadEntity =
+    (typeof candidate.jsonPayload?.entity === "string" && candidate.jsonPayload.entity.trim()) ||
+    (typeof candidate.jsonPayload?.subject === "string" && candidate.jsonPayload.subject.trim()) ||
+    "";
+  if (payloadEntity) return payloadEntity.slice(0, 120);
+
+  const fromText = candidate.summary.match(/\b(my|i|our)\s+([a-z0-9 _-]{2,40})/i);
+  if (fromText?.[2]) return fromText[2].trim().slice(0, 120);
+
+  return "user";
+}
+
+function clamp(value: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function buildStructuredMemory(candidate: MemoryCandidate): StructuredMemory {
+  const content = candidate.canonicalText.trim().slice(0, 1200);
+  return {
+    id: "",
+    type: inferMemoryType(candidate.kind),
+    entity: extractEntity(candidate),
+    content,
+    importance: clamp(candidate.salience * 0.65 + candidate.confidence * 0.35),
+    createdAt: new Date().toISOString(),
+    isDurable: isDurableMemoryText(content),
+  };
+}
+
+function memoryTitle(memory: StructuredMemory): string {
+  const entityPrefix = memory.entity === "user" ? "" : `${memory.entity}: `;
+  return `${entityPrefix}${memory.type}`.slice(0, 120);
+}
+
+async function findBestSimilarityMatch(
+  deps: GraphMutationDeps,
+  memory: StructuredMemory
+): Promise<{ node: GraphNode; similarity: number } | null> {
+  const embedding = await generateEmbedding(memory.content, deps.hfApiKey, "query");
+  if (!embedding) return null;
+
+  const candidates = await semanticSearch(deps.db, deps.userId, embedding, {
+    limit: 4,
+    threshold: 0.75,
+  });
+  if (candidates.length === 0) return null;
+  return candidates[0] ?? null;
+}
+
+async function findRelatedEntityNode(
+  deps: GraphMutationDeps,
+  memory: StructuredMemory,
+  excludeNodeId?: string
+): Promise<GraphNode | null> {
+  if (!memory.entity || memory.entity === "user") return null;
+  const listed = await listNodes(deps.db, deps.userId, {
+    limit: 5,
+    search: memory.entity,
+  });
+  return listed.nodes.find((node) => node.id !== excludeNodeId) ?? null;
+}
+
+function hasSameEntityAndType(existingNode: GraphNode, memory: StructuredMemory): boolean {
+  const metadata = (existingNode.metadata ?? {}) as Record<string, unknown>;
+  const entity = typeof metadata.entity === "string" ? metadata.entity : "user";
+  const type = typeof metadata.memoryType === "string" ? metadata.memoryType : "fact";
+  return entity.toLowerCase() === memory.entity.toLowerCase() && type === memory.type;
+}
+
+export async function createNode(
+  memory: StructuredMemory,
+  deps: GraphMutationDeps
+): Promise<GraphNode> {
+  if (!memory.isDurable) {
+    throw new Error("Skipping non-durable memory create");
+  }
+  const embedding = await generateEmbedding(memory.content, deps.hfApiKey, "document");
+  return graphCreateNode(deps.db, {
+    userId: deps.userId,
+    type: "note",
+    title: memoryTitle(memory),
+    summary: memory.content.slice(0, 180),
+    content: memory.content,
+    source: "decision-engine",
+    embedding: embedding ?? undefined,
+    metadata: {
+      memoryType: memory.type,
+      entity: memory.entity,
+      importance: memory.importance,
+      createdAt: memory.createdAt,
+    },
+  });
+}
+
+export async function updateNode(
+  existingNode: GraphNode,
+  memory: StructuredMemory,
+  deps: GraphMutationDeps
+): Promise<GraphNode | null> {
+  if (!memory.isDurable) {
+    return null;
+  }
+  const metadata = {
+    ...(existingNode.metadata ?? {}),
+    memoryType: memory.type,
+    entity: memory.entity,
+    importance: Math.max(
+      memory.importance,
+      Number((existingNode.metadata as Record<string, unknown> | null)?.importance ?? 0)
+    ),
+    lastUpdatedAt: new Date().toISOString(),
+  };
+
+  return graphUpdateNode(deps.db, existingNode.id, deps.userId, {
+    title: memoryTitle(memory),
+    summary: memory.content.slice(0, 180),
+    content: memory.content,
+    metadata,
+  });
+}
+
+export async function linkNodes(
+  nodeA: GraphNode,
+  nodeB: GraphNode,
+  relation: string,
+  deps: GraphMutationDeps
+): Promise<void> {
+  if (nodeA.id === nodeB.id) return;
+  await deps.db
+    .insert(edges)
+    .values({
+      userId: deps.userId,
+      sourceNodeId: nodeA.id,
+      targetNodeId: nodeB.id,
+      type: "reference",
+      weight: 0.75,
+      metadata: { relation, source: "decision-engine" },
+    })
+    .onConflictDoNothing();
+}
+
+async function applyMemoryToGraph(
+  deps: GraphMutationDeps,
+  memory: StructuredMemory
+): Promise<GraphMutationOutcome> {
+  if (!memory.isDurable) {
+    return { action: "SKIP", nodeId: "" };
+  }
+
+  const similar = await findBestSimilarityMatch(deps, memory);
+  if (similar && similar.similarity > 0.9) {
+    const updated = await updateNode(similar.node, memory, deps);
+    return {
+      action: "UPDATE",
+      nodeId: updated?.id ?? similar.node.id,
+      similarity: similar.similarity,
+    };
+  }
+
+  if (similar && hasSameEntityAndType(similar.node, memory)) {
+    const updated = await updateNode(similar.node, memory, deps);
+    return {
+      action: "UPDATE",
+      nodeId: updated?.id ?? similar.node.id,
+      similarity: similar.similarity,
+    };
+  }
+
+  const relatedEntityNode = await findRelatedEntityNode(deps, memory, similar?.node.id);
+  if (relatedEntityNode && similar?.node) {
+    await linkNodes(similar.node, relatedEntityNode, "related_entity", deps);
+    return {
+      action: "LINK",
+      nodeId: similar.node.id,
+      linkedToNodeId: relatedEntityNode.id,
+      similarity: similar.similarity,
+    };
+  }
+
+  const created = await createNode(memory, deps);
+  if (relatedEntityNode) {
+    await linkNodes(created, relatedEntityNode, "related_entity", deps);
+    return {
+      action: "LINK",
+      nodeId: created.id,
+      linkedToNodeId: relatedEntityNode.id,
+    };
+  }
+
+  return { action: "CREATE", nodeId: created.id };
+}
+
+export async function runMemoryExtraction(params: MemoryExtractionParams) {
+  if (params.isMemoryQuery) {
+    return {
+      candidates: [] as StructuredMemory[],
+      operations: [] as GraphMutationOutcome[],
+    };
+  }
+
+  if (
+    !canWriteMemory({
+      intent: params.intent ?? "ask",
+      isMemoryQuery: !!params.isMemoryQuery,
+      extractionConfidence: params.extractionConfidence ?? 0,
+      message: params.userMessage,
+    })
+  ) {
+    return {
+      candidates: [] as StructuredMemory[],
+      operations: [] as GraphMutationOutcome[],
+    };
+  }
+
+  const candidates = await extractMemoryCandidates({
+    apiKey: params.groqApiKey,
+    input: {
+      userMessage: params.userMessage,
+      assistantMessage: params.assistantMessage,
+      recentHistory: params.history,
+      explicitStore: params.explicitStore,
+    },
+  });
+
+  const structured = candidates.map(buildStructuredMemory);
+  const operations = await Promise.all(
+    structured.map((memory) =>
+      applyMemoryToGraph(
+        { db: params.db, userId: params.userId, hfApiKey: params.hfApiKey },
+        memory
+      )
+    )
+  );
+
+  return {
+    candidates: structured,
+    operations,
   };
 }
