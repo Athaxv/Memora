@@ -125,7 +125,7 @@ export function WhatsAppLink() {
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="6-digit code"
               maxLength={6}
-              className="w-40 border border-zinc-200 bg-[#fef8f0] px-4 py-2.5 text-center text-[15px] font-mono tracking-[0.3em] text-zinc-900 placeholder:text-zinc-400 placeholder:tracking-normal placeholder:font-sans outline-none focus:border-[#fbbf9b] transition-colors"
+              className="w-full sm:w-40 border border-zinc-200 bg-[#fef8f0] px-4 py-2.5 text-center text-[15px] font-mono tracking-[0.3em] text-zinc-900 placeholder:text-zinc-400 placeholder:tracking-normal placeholder:font-sans outline-none focus:border-[#fbbf9b] transition-colors"
             />
             <button
               onClick={handleVerify}
