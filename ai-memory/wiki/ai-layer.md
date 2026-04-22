@@ -1,14 +1,16 @@
 # AI Layer
 
 ## Summary
-AI utilities provide summarization, auto-tagging, intent classification, and embeddings using Groq-hosted LLMs and Hugging Face embeddings.
+AI utilities now power both the legacy ingestion/chat flow and a normalized memory layer. Groq-hosted LLMs are used for summarization, auto-tagging, intent classification, memory extraction, and reply generation; Hugging Face embeddings support both graph nodes and normalized memory retrieval.
 
 ## Detailed explanation
 - Summarization uses Groq OpenAI-compatible API with a Llama 4 model and short outputs.
 - Auto-tagging extracts 3-8 tags as structured JSON, validated with Zod.
 - Intent classification maps user messages to store/retrieve/summarize/connect/ask/manage.
 - Embeddings use Hugging Face Router inference (`BAAI/bge-base-en-v1.5`) and are optional; if no HF key is configured, embeddings are skipped to keep ingestion functional.
-- Chat retrieval now includes a lexical fallback in [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts): if semantic retrieval yields no results (or query embedding fails), it runs text search over nodes to reduce false "no memory" replies.
+- Normalized memory extraction is implemented in [packages/memory/src/extractor.ts](packages/memory/src/extractor.ts): it extracts durable user facts/preferences/goals from user turns, then salience/confidence heuristics filter noise before merge.
+- Normalized memory retrieval is implemented in [packages/memory/src/search.ts](packages/memory/src/search.ts): it combines FTS and vector similarity over `memory_records`.
+- Chat orchestration now uses dedicated retrieval/context/reasoning services instead of one monolithic chat service.
 - Groq calls require Groq-supported model IDs. OpenAI-specific model IDs (for example `chatgpt-4o-latest` or `codex-mini-latest`) result in `model_not_found` responses and can surface as `/chat` failures.
 
 ## Relationships
@@ -21,6 +23,11 @@ AI utilities provide summarization, auto-tagging, intent classification, and emb
 - [packages/ai/src/auto-tag.ts](packages/ai/src/auto-tag.ts)
 - [packages/ai/src/intent.ts](packages/ai/src/intent.ts)
 - [packages/ai/src/embeddings.ts](packages/ai/src/embeddings.ts)
-- [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts)
+- [packages/memory/src/extractor.ts](packages/memory/src/extractor.ts)
+- [packages/memory/src/search.ts](packages/memory/src/search.ts)
+- [apps/backend/src/services/chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts)
+- [apps/backend/src/services/retrieval-service.ts](apps/backend/src/services/retrieval-service.ts)
+- [apps/backend/src/services/context-builder.ts](apps/backend/src/services/context-builder.ts)
+- [apps/backend/src/services/reasoning-service.ts](apps/backend/src/services/reasoning-service.ts)
 - [packages/ai/src/index.ts](packages/ai/src/index.ts)
 - [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx)

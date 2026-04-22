@@ -160,3 +160,38 @@
 	- [apps/backend/package.json](apps/backend/package.json): `start:prod` now runs `bun dist/index.js`; `start`/`start:deploy` now build first.
 	- [apps/backend/Dockerfile](apps/backend/Dockerfile): build step `bun run --cwd apps/backend build` is executed during image build.
 	- [apps/backend/scripts/start-render.sh](apps/backend/scripts/start-render.sh): runtime-only startup with prebuilt dist artifact; no TypeScript runtime execution.
+
+## Implementation notes (2026-04-21, normalized memory layer foundation)
+- Added normalized memory schema under [packages/db/src/schema](packages/db/src/schema):
+	- [artifacts.ts](packages/db/src/schema/artifacts.ts)
+	- [memory-records.ts](packages/db/src/schema/memory-records.ts)
+	- [memory-evidence.ts](packages/db/src/schema/memory-evidence.ts)
+	- [memory-edges.ts](packages/db/src/schema/memory-edges.ts)
+	- [conversation-state.ts](packages/db/src/schema/conversation-state.ts)
+- Added migration [packages/db/drizzle/0005_memory_layer.sql](packages/db/drizzle/0005_memory_layer.sql) with new enums/tables, HNSW vector index, and FTS index for `memory_records`.
+- Introduced shared package [packages/memory](packages/memory) for artifact creation, LLM-based post-turn memory extraction, merge/upsert logic, conversation-state updates, and normalized memory search.
+- Refactored backend chat into orchestrated services:
+	- [intent-service.ts](apps/backend/src/services/intent-service.ts)
+	- [retrieval-service.ts](apps/backend/src/services/retrieval-service.ts)
+	- [context-builder.ts](apps/backend/src/services/context-builder.ts)
+	- [reasoning-service.ts](apps/backend/src/services/reasoning-service.ts)
+	- [chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts)
+- [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts) now returns `confidence`, `grounding`, and `memoryWriteStatus`, persists richer metadata, and triggers post-turn normalized memory processing.
+- Added authenticated internal endpoints in [apps/backend/src/routes/internal/index.ts](apps/backend/src/routes/internal/index.ts) for event-style hooks, extraction, merge, context reads, and reindex search.
+- Updated [packages/ingestion/src/pipeline.ts](packages/ingestion/src/pipeline.ts) to create an `artifact` in addition to the legacy graph `node`, and `IngestResult` now includes optional `artifactId`.
+- Validation completed:
+	- `tsc --noEmit -p packages/memory/tsconfig.json`
+	- `tsc --noEmit -p packages/db/tsconfig.json`
+	- `tsc --noEmit -p packages/ingestion/tsconfig.json`
+	- `tsc --noEmit -p apps/backend/tsconfig.json`
+	- `bun --filter @repo/db test`
+	- `bun --filter @repo/ai test`
+	- `bun --filter @repo/ingestion test`
+
+## Incident notes (2026-04-21, memory_records missing in live DB)
+- Symptom: `POST /chat` returned 500 with `relation "memory_records" does not exist` from [packages/memory/src/search.ts](packages/memory/src/search.ts) during normalized retrieval.
+- Root cause: code was deployed before the new normalized memory schema was applied to the database.
+- Resolution:
+	- Added defensive fallback in [packages/memory/src/search.ts](packages/memory/src/search.ts) so missing normalized-memory tables return `[]` instead of crashing chat; retrieval then falls back to legacy graph search.
+	- `bun --filter @repo/db db:migrate` failed because the live database already had older objects and migration history was drifted (`type "edge_type" already exists`).
+	- Applied schema reconciliation with `bun --filter @repo/db db:push`, which created the missing normalized memory tables successfully.

@@ -1,16 +1,17 @@
 # Backend API
 
 ## Summary
-The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, WhatsApp, and Telegram routes. It relies on shared packages for schema access, graph operations, AI utilities, and validation.
+The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, internal memory, WhatsApp, and Telegram routes. It now uses split chat orchestration: synchronous retrieval/reasoning for replies and post-turn normalized memory processing for durable state.
 
 ## Detailed explanation
 - Server bootstraps Fastify, registers auth, cookies, CORS, and multipart, then attaches route groups.
 - Auth routes manage signup/login, Google OAuth, refresh rotation, logout, and current user info.
 - Auth routes include endpoint-specific rate limits and OAuth state validation.
 - Memory routes support list, detail, update, soft delete, semantic search, and graph payload generation for visualization.
-- Ingest routes handle text/URL ingestion and multipart file uploads with type and size checks.
-- Chat route classifies intent, retrieves related memories, calls Groq to generate an answer, and now persists user/assistant turns to `conversations` and `messages`.
-- Chat route now handles `store` intent by ingesting text directly into memory nodes before replying, and non-store intents run retrieval + generation with recent conversation-turn grounding.
+- Ingest routes handle text/URL ingestion and multipart file uploads with type and size checks, and the ingestion pipeline now also creates an `artifacts` record for raw captured content.
+- Chat route persists user/assistant turns to `conversations` and `messages`, returns `confidence`, `grounding`, and `memoryWriteStatus`, and triggers post-turn normalized memory extraction.
+- Explicit `store` intent still ingests into the legacy graph node pipeline for backward compatibility, then runs normalized memory processing against the new memory tables.
+- Internal routes under `/internal` expose memory extraction, merge, context, and event-style hooks for future async/event-driven orchestration.
 - Tags route returns user tags for filtering.
 - WhatsApp routes are registered; detail lives under the whatsapp route folder.
 - Telegram routes are registered; deep-link linking now starts at `/telegram/link/start` and completes via `/telegram/webhook` `/start <token>` handling.
@@ -39,6 +40,12 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, W
 - [apps/backend/src/routes/ingest/index.ts](apps/backend/src/routes/ingest/index.ts)
 - [apps/backend/src/routes/chat/index.ts](apps/backend/src/routes/chat/index.ts)
 - [apps/backend/src/services/chat.ts](apps/backend/src/services/chat.ts)
+- [apps/backend/src/routes/internal/index.ts](apps/backend/src/routes/internal/index.ts)
+- [apps/backend/src/services/chat-orchestrator.ts](apps/backend/src/services/chat-orchestrator.ts)
+- [apps/backend/src/services/intent-service.ts](apps/backend/src/services/intent-service.ts)
+- [apps/backend/src/services/retrieval-service.ts](apps/backend/src/services/retrieval-service.ts)
+- [apps/backend/src/services/context-builder.ts](apps/backend/src/services/context-builder.ts)
+- [apps/backend/src/services/reasoning-service.ts](apps/backend/src/services/reasoning-service.ts)
 - [apps/backend/src/routes/tags/index.ts](apps/backend/src/routes/tags/index.ts)
 - [apps/backend/src/routes/whatsapp/index.ts](apps/backend/src/routes/whatsapp/index.ts)
 - [apps/backend/src/routes/telegram/index.ts](apps/backend/src/routes/telegram/index.ts)
