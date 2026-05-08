@@ -3,7 +3,12 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { users, nodes } from "@repo/db/schema";
-import { signUpSchema, loginSchema, updateProfileSchema } from "@repo/validators";
+import {
+  signUpSchema,
+  loginSchema,
+  updateProfileSchema,
+  changePasswordSchema,
+} from "@repo/validators";
 import { db } from "../../db";
 import { config } from "../../config";
 import {
@@ -12,6 +17,7 @@ import {
   revokeFamily,
   clearAuthCookies,
 } from "../../lib/tokens";
+import { refreshTokens } from "@repo/db/schema";
 
 const AVATAR_CHOICES = ["/char1.png", "/char2.png", "/char3.png"];
 function randomAvatar() {
@@ -412,6 +418,122 @@ export async function authRoutes(app: FastifyInstance) {
       request.log.error(error);
       return reply.code(500).send({ error: "Internal server error" });
     }
+  });
+
+  // POST /auth/me/password — authenticated
+  app.post("/me/password", { preHandler: [app.authenticate] }, async (request, reply) => {
+    try {
+      const { id: userId } = request.user;
+      const input = changePasswordSchema.parse(request.body);
+
+      const [user] = await db
+        .select({ hashedPassword: users.hashedPassword })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.hashedPassword) {
+        return reply.code(400).send({ error: "Password login not enabled for this account" });
+      }
+
+      const valid = await bcrypt.compare(input.currentPassword, user.hashedPassword);
+      if (!valid) {
+        return reply.code(401).send({ error: "Current password is incorrect" });
+      }
+
+      const hashedPassword = await bcrypt.hash(input.newPassword, 12);
+      await db.update(users).set({ hashedPassword, updatedAt: new Date() }).where(eq(users.id, userId));
+
+      return reply.send({ ok: true });
+    } catch (error) {
+      if (error instanceof Error && error.name === "ZodError") {
+        return reply.code(400).send({ error: "Invalid input" });
+      }
+      request.log.error(error);
+      return reply.code(500).send({ error: "Internal server error" });
+    }
+  });
+
+  // GET /auth/me/sessions — authenticated
+  app.get("/me/sessions", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id: userId } = request.user;
+    const rows = await db
+      .select({
+        id: refreshTokens.id,
+        familyId: refreshTokens.familyId,
+        createdAt: refreshTokens.createdAt,
+        expiresAt: refreshTokens.expiresAt,
+        userAgent: refreshTokens.userAgent,
+        ipAddress: refreshTokens.ipAddress,
+      })
+      .from(refreshTokens)
+      .where(
+        and(
+          eq(refreshTokens.userId, userId),
+          isNull(refreshTokens.revokedAt),
+          sql`${refreshTokens.expiresAt} > now()`
+        )
+      )
+      .orderBy(sql`${refreshTokens.createdAt} desc`)
+      .limit(20);
+
+    return reply.send({ sessions: rows });
+  });
+
+  // POST /auth/me/logout-all — authenticated
+  app.post("/me/logout-all", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id: userId } = request.user;
+    await db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
+    clearAuthCookies(reply);
+    return reply.send({ ok: true });
+  });
+
+  // GET /auth/me/export — authenticated
+  app.get("/me/export", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id: userId } = request.user;
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        avatarUrl: users.avatarUrl,
+        onboardingCompleted: users.onboardingCompleted,
+        socialLinks: users.socialLinks,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const memoryRows = await db
+      .select({
+        id: nodes.id,
+        type: nodes.type,
+        title: nodes.title,
+        summary: nodes.summary,
+        source: nodes.source,
+        createdAt: nodes.createdAt,
+      })
+      .from(nodes)
+      .where(and(eq(nodes.userId, userId), isNull(nodes.deletedAt)))
+      .orderBy(sql`${nodes.createdAt} desc`)
+      .limit(1000);
+
+    return reply.send({
+      exportedAt: new Date().toISOString(),
+      user,
+      memories: memoryRows,
+    });
+  });
+
+  // DELETE /auth/me — authenticated
+  app.delete("/me", { preHandler: [app.authenticate] }, async (request, reply) => {
+    const { id: userId } = request.user;
+    await db.delete(users).where(eq(users.id, userId));
+    clearAuthCookies(reply);
+    return reply.send({ ok: true });
   });
 
   // GET /auth/me/stats — authenticated

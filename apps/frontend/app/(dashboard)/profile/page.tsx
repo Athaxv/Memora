@@ -12,6 +12,12 @@ import {
   Globe,
   FileText,
   Upload,
+  Shield,
+  Download,
+  Trash2,
+  Lock,
+  LogOut,
+  Clock3,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -41,6 +47,28 @@ interface UserProfile {
 interface Stats {
   memoriesCount: number;
   memberSince: string;
+}
+
+interface SessionInfo {
+  id: string;
+  familyId: string;
+  createdAt: string;
+  expiresAt: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+}
+
+interface ResumeDetail {
+  id: string;
+  type: string;
+  source: string | null;
+  asset?: {
+    status: "available" | "unavailable";
+    url?: string;
+    mimeType?: string;
+    size?: number;
+    name?: string;
+  };
 }
 
 const socialFields = [
@@ -77,6 +105,15 @@ export default function ProfilePage() {
   // Resume upload
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [editingAvatar, setEditingAvatar] = useState(false);
+  const [avatarDraft, setAvatarDraft] = useState("");
+  const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [privacyUseProfileContext, setPrivacyUseProfileContext] = useState(true);
+  const [privacyAutoSaveAssets, setPrivacyAutoSaveAssets] = useState(true);
 
   async function readErrorMessage(res: Response): Promise<string> {
     const contentType = res.headers.get("content-type") || "";
@@ -95,11 +132,35 @@ export default function ProfilePage() {
     Promise.all([
       api("/auth/me").then((r) => r.json()),
       api("/auth/me/stats").then((r) => r.json()),
-    ]).then(([userData, statsData]) => {
+      api("/auth/me/sessions")
+        .then((r) => (r.ok ? r.json() : { sessions: [] }))
+        .catch(() => ({ sessions: [] })),
+    ]).then(([userData, statsData, sessionsData]) => {
       setUser(userData);
       setStats(statsData);
+      setSessions(sessionsData.sessions || []);
+      setAvatarDraft(userData.avatarUrl || "");
       setLoading(false);
     });
+  }, []);
+
+  useEffect(() => {
+    if (!user?.resumeNode?.id) {
+      setResumeDetail(null);
+      return;
+    }
+    api(`/memories/${user.resumeNode.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setResumeDetail(data))
+      .catch(() => setResumeDetail(null));
+  }, [user?.resumeNode?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const savedProfileContext = window.localStorage.getItem("profile:privacy:useProfileContext");
+    const savedAutoSaveAssets = window.localStorage.getItem("profile:privacy:autoSaveAssets");
+    if (savedProfileContext) setPrivacyUseProfileContext(savedProfileContext === "true");
+    if (savedAutoSaveAssets) setPrivacyAutoSaveAssets(savedAutoSaveAssets === "true");
   }, []);
 
   async function saveName() {
@@ -131,6 +192,19 @@ export default function ProfilePage() {
       setUser((prev) => (prev ? { ...prev, socialLinks: updated.socialLinks } : prev));
     }
     setEditingSocial(false);
+  }
+
+  async function saveAvatar() {
+    if (!avatarDraft.trim()) return;
+    const res = await api("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify({ avatarUrl: avatarDraft.trim() }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setUser((prev) => (prev ? { ...prev, avatarUrl: updated.avatarUrl } : prev));
+      setEditingAvatar(false);
+    }
   }
 
   async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -171,6 +245,65 @@ export default function ProfilePage() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  async function handlePasswordChange() {
+    if (!currentPassword || !newPassword) return;
+    setChangingPassword(true);
+    const res = await api("/auth/me/password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    setChangingPassword(false);
+    if (res.ok) {
+      setCurrentPassword("");
+      setNewPassword("");
+      alert("Password updated");
+      return;
+    }
+    const message = await readErrorMessage(res);
+    alert(message);
+  }
+
+  async function handleLogoutAll() {
+    const res = await api("/auth/me/logout-all", { method: "POST" });
+    if (res.ok) window.location.href = "/login";
+  }
+
+  async function handleExportData() {
+    const res = await api("/auth/me/export");
+    if (!res.ok) {
+      const message = await readErrorMessage(res);
+      alert(message);
+      return;
+    }
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `memora-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleDeleteAccount() {
+    if (!confirm("Delete your account permanently? This cannot be undone.")) return;
+    const res = await api("/auth/me", { method: "DELETE" });
+    if (res.ok) {
+      window.location.href = "/signup";
+      return;
+    }
+    const message = await readErrorMessage(res);
+    alert(message);
+  }
+
+  function persistPrivacy(
+    key: "profile:privacy:useProfileContext" | "profile:privacy:autoSaveAssets",
+    value: boolean
+  ) {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(key, String(value));
+  }
+
   if (loading || !user) {
     return (
       <div className="flex h-full items-center justify-center bg-white">
@@ -203,6 +336,16 @@ export default function ProfilePage() {
                   alt="Avatar"
                   className="h-20 w-20 border border-zinc-200 bg-zinc-50 object-cover"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAvatarDraft(user.avatarUrl || "");
+                    setEditingAvatar((prev) => !prev);
+                  }}
+                  className="absolute -bottom-2 -right-2 rounded border border-zinc-200 bg-white px-2 py-1 text-[10px] font-bold text-zinc-700 hover:border-zinc-900"
+                >
+                  Avatar
+                </button>
               </div>
 
               {/* Info */}
@@ -253,6 +396,22 @@ export default function ProfilePage() {
                 </p>
               </div>
             </div>
+            {editingAvatar && (
+              <div className="mt-5 flex items-center gap-2">
+                <input
+                  value={avatarDraft}
+                  onChange={(e) => setAvatarDraft(e.target.value)}
+                  placeholder="https://..."
+                  className="flex-1 border border-zinc-200 bg-white px-3 py-2 text-[12px] text-zinc-900 outline-none"
+                />
+                <button
+                  onClick={saveAvatar}
+                  className="px-3 py-2 text-[11px] font-bold uppercase tracking-widest text-zinc-900 hover:bg-zinc-50"
+                >
+                  Save
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Section 2: Social Links */}
@@ -372,6 +531,33 @@ export default function ProfilePage() {
                 </span>
               </button>
             )}
+
+            {resumeDetail && (
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="border border-zinc-200 bg-white px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Type</p>
+                  <p className="mt-1 text-[12px] font-bold text-zinc-900">
+                    {resumeDetail.asset?.mimeType || resumeDetail.type}
+                  </p>
+                </div>
+                <div className="border border-zinc-200 bg-white px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Size</p>
+                  <p className="mt-1 text-[12px] font-bold text-zinc-900">
+                    {resumeDetail.asset?.size
+                      ? `${Math.round(resumeDetail.asset.size / 1024)} KB`
+                      : "Unknown"}
+                  </p>
+                </div>
+                <div className="border border-zinc-200 bg-white px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    Source
+                  </p>
+                  <p className="mt-1 text-[12px] font-bold text-zinc-900">
+                    {resumeDetail.source || "upload"}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section 4: Account Stats */}
@@ -406,6 +592,123 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
+            <CornerAccents />
+            <div className="mb-5 flex items-center gap-2">
+              <Shield size={16} className="text-zinc-700" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900">
+                Privacy & Memory
+              </h3>
+            </div>
+            <div className="space-y-4">
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-[13px] text-zinc-700">Use profile context in AI responses</span>
+                <input
+                  type="checkbox"
+                  checked={privacyUseProfileContext}
+                  onChange={(e) => {
+                    setPrivacyUseProfileContext(e.target.checked);
+                    persistPrivacy("profile:privacy:useProfileContext", e.target.checked);
+                  }}
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3">
+                <span className="text-[13px] text-zinc-700">Auto-save uploaded assets in memory graph</span>
+                <input
+                  type="checkbox"
+                  checked={privacyAutoSaveAssets}
+                  onChange={(e) => {
+                    setPrivacyAutoSaveAssets(e.target.checked);
+                    persistPrivacy("profile:privacy:autoSaveAssets", e.target.checked);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
+            <CornerAccents />
+            <div className="mb-5 flex items-center gap-2">
+              <Lock size={16} className="text-zinc-700" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900">
+                Security
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Current password"
+                className="border border-zinc-200 bg-white px-3 py-2 text-[13px] text-zinc-900 outline-none"
+              />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New password"
+                className="border border-zinc-200 bg-white px-3 py-2 text-[13px] text-zinc-900 outline-none"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={handlePasswordChange}
+                disabled={changingPassword}
+                className="border border-zinc-900 bg-zinc-900 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-white disabled:opacity-60"
+              >
+                {changingPassword ? "Updating..." : "Change password"}
+              </button>
+              <button
+                onClick={handleLogoutAll}
+                className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-500 hover:text-zinc-900"
+              >
+                <LogOut size={14} />
+                Logout all sessions
+              </button>
+            </div>
+            {sessions.length > 0 && (
+              <div className="mt-5 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                  Active sessions
+                </p>
+                {sessions.slice(0, 4).map((session) => (
+                  <div key={session.id} className="flex items-center justify-between border border-zinc-200 px-3 py-2">
+                    <span className="truncate text-[12px] text-zinc-700">
+                      {session.userAgent || "Unknown device"}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500">
+                      <Clock3 size={12} />
+                      {new Date(session.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative border border-zinc-200/80 bg-white p-5 md:p-8">
+            <CornerAccents />
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-5">
+              Account Actions
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleExportData}
+                className="inline-flex items-center gap-2 border border-zinc-200 bg-white px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-zinc-700 hover:border-zinc-900"
+              >
+                <Download size={14} />
+                Export data
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="inline-flex items-center gap-2 border border-red-200 bg-red-50 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-red-700 hover:bg-red-100"
+              >
+                <Trash2 size={14} />
+                Delete account
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>

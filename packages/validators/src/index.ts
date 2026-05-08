@@ -16,6 +16,8 @@ export const ingestSchema = z.object({
   content: z.string().min(1).max(100000),
   title: z.string().max(500).optional(),
   tags: z.array(z.string().max(100)).max(20).optional(),
+  createdFrom: z.enum(["vault", "chat", "onboarding", "profile", "api"]).optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 export const updateNodeSchema = z.object({
@@ -47,9 +49,15 @@ export const socialLinksSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(255).optional(),
+  avatarUrl: z.string().url().max(1000).optional(),
   onboardingCompleted: z.boolean().optional(),
   socialLinks: socialLinksSchema.optional(),
   resumeNodeId: z.string().length(26).optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(100),
 });
 
 export const chatSchema = z.object({
