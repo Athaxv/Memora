@@ -3,6 +3,7 @@ import { ingestSchema } from "@repo/validators";
 import { ingest } from "@repo/ingestion";
 import { db } from "../../db";
 import { config } from "../../config";
+import { uploadAssetToR2 } from "../../services/asset-storage";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -33,6 +34,35 @@ function normalizeMimeType(fileName: string, mimeType: string): string {
   return mimeType;
 }
 
+function getMultipartField(fields: Record<string, unknown> | undefined, name: string) {
+  const field = fields?.[name];
+  if (field && typeof field === "object" && "value" in field) {
+    const value = (field as { value?: unknown }).value;
+    return typeof value === "string" ? value : undefined;
+  }
+  return undefined;
+}
+
+function parseTags(value: string | undefined): string[] | undefined {
+  const tags = value
+    ?.split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+  return tags?.length ? tags : undefined;
+}
+
+function parseMetadata(value: string | undefined): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function ingestRoutes(app: FastifyInstance) {
   // All routes require auth
   app.addHook("preHandler", app.authenticate);
@@ -55,6 +85,8 @@ export async function ingestRoutes(app: FastifyInstance) {
           content: input.content,
           title: input.title,
           tags: input.tags,
+          createdFrom: input.createdFrom,
+          metadata: input.metadata,
         }
       );
 
@@ -94,15 +126,22 @@ export async function ingestRoutes(app: FastifyInstance) {
           .send({ error: "File too large. Maximum size is 10MB." });
       }
 
-      // Extract tags from fields if present
-      const tagsField = file.fields?.tags;
-      let tags: string[] | undefined;
-      if (tagsField && "value" in tagsField && typeof tagsField.value === "string") {
-        tags = tagsField.value
-          .split(",")
-          .map((t: string) => t.trim())
-          .filter(Boolean);
-      }
+      const tags = parseTags(getMultipartField(file.fields, "tags"));
+      const title = getMultipartField(file.fields, "title");
+      const createdFrom = getMultipartField(file.fields, "createdFrom") as
+        | "vault"
+        | "chat"
+        | "onboarding"
+        | "profile"
+        | "api"
+        | undefined;
+      const metadata = parseMetadata(getMultipartField(file.fields, "metadata"));
+      const uploadedAsset = await uploadAssetToR2({
+        userId,
+        fileName: file.filename,
+        mimeType: normalizedMimeType,
+        buffer,
+      });
 
       const result = await ingest(
         {
@@ -114,11 +153,22 @@ export async function ingestRoutes(app: FastifyInstance) {
           userId,
           type: "file",
           content: file.filename,
-          title: file.filename.replace(/\.[^.]+$/, ""),
+          title: title || file.filename.replace(/\.[^.]+$/, ""),
           tags,
           fileName: file.filename,
           mimeType: normalizedMimeType,
           fileBuffer: buffer,
+          fileSize: buffer.length,
+          createdFrom,
+          metadata: {
+            ...(metadata ?? {}),
+            assetStorageProvider: uploadedAsset.storageProvider,
+            assetObjectKey: uploadedAsset.objectKey,
+            assetPublicUrl: uploadedAsset.publicUrl,
+            assetMimeType: uploadedAsset.mimeType,
+            assetSize: uploadedAsset.size,
+            assetOriginalName: uploadedAsset.name,
+          },
         }
       );
 

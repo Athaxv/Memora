@@ -357,16 +357,25 @@ describe("ingest (full pipeline)", () => {
     expect(autoTag).toHaveBeenCalledWith("Note content here", "test-groq-key");
 
     // Verify node was created with correct fields
-    expect(createNode).toHaveBeenCalledWith(mockDb, {
-      userId: "u1",
-      type: "note",
-      title: "My Note",
-      content: "Note content here",
-      summary: "This is a summary of the note.",
-      source: "manual",
-      sourceUrl: undefined,
-      embedding: [0.1, 0.2, 0.3],
-    });
+    expect(createNode).toHaveBeenCalledWith(
+      mockDb,
+      expect.objectContaining({
+        userId: "u1",
+        type: "note",
+        title: "My Note",
+        content: "Note content here",
+        summary: "This is a summary of the note.",
+        source: "manual",
+        sourceUrl: undefined,
+        metadata: expect.objectContaining({
+          artifactId: "artifact-1",
+          inputType: "text",
+          sourceKind: "note",
+          tags: ["productivity", "notes"],
+        }),
+        embedding: [0.1, 0.2, 0.3],
+      })
+    );
 
     // Verify semantic edges were computed (since embedding was available)
     expect(computeSemanticEdges).toHaveBeenCalledWith(
@@ -437,7 +446,7 @@ describe("ingest (full pipeline)", () => {
     } as any);
     vi.mocked(computeSemanticEdges).mockResolvedValue(0);
 
-    await ingest(makeCtx(), {
+    const result = await ingest(makeCtx(), {
       userId: "u1",
       type: "file",
       content: "",
@@ -451,6 +460,54 @@ describe("ingest (full pipeline)", () => {
       "application/pdf",
       "doc.pdf",
       "test-groq-key"
+    );
+    expect(result.asset).toEqual(
+      expect.objectContaining({
+        status: "unavailable",
+        reason: "legacy_upload_no_binary",
+      })
+    );
+  });
+
+  it("returns available asset for file input when public URL metadata exists", async () => {
+    const buf = Buffer.from("file data");
+    vi.mocked(extractFile).mockResolvedValue({
+      title: "Document",
+      content: "File content",
+    });
+    vi.mocked(summarize).mockResolvedValue("Summary");
+    vi.mocked(generateEmbedding).mockResolvedValue(null);
+    vi.mocked(autoTag).mockResolvedValue([]);
+    vi.mocked(createArtifact).mockResolvedValue({ id: "artifact-file" } as any);
+    vi.mocked(createNode).mockResolvedValue({
+      id: "node-file",
+      title: "Document",
+    } as any);
+    vi.mocked(computeSemanticEdges).mockResolvedValue(0);
+
+    const result = await ingest(makeCtx(), {
+      userId: "u1",
+      type: "file",
+      content: "",
+      mimeType: "application/pdf",
+      fileName: "doc.pdf",
+      fileBuffer: buf,
+      metadata: {
+        assetPublicUrl: "https://cdn.example.com/path/doc.pdf",
+        assetMimeType: "application/pdf",
+        assetSize: 1234,
+        assetOriginalName: "doc.pdf",
+      },
+    });
+
+    expect(result.asset).toEqual(
+      expect.objectContaining({
+        status: "available",
+        url: "https://cdn.example.com/path/doc.pdf",
+        mimeType: "application/pdf",
+        size: 1234,
+        name: "doc.pdf",
+      })
     );
   });
 

@@ -12,6 +12,7 @@ export interface RetrievalResult {
     title: string | null;
     summary: string | null;
     type: string;
+    metadata?: Record<string, unknown> | null;
     similarity: number;
   }>;
 }
@@ -94,6 +95,11 @@ export async function retrieveMemoryContext(params: {
   );
   let legacyResults: Awaited<ReturnType<typeof semanticSearch>> = [];
 
+  const topicHints = [
+    activeTopic.trim().toLowerCase(),
+    ...params.conversationState?.activeTopics.map((topic) => topic.trim().toLowerCase()) ?? [],
+  ].filter(Boolean);
+
   if (queryEmbedding) {
     legacyResults = await semanticSearch(params.db, params.userId, queryEmbedding, {
       limit: legacyLimit,
@@ -131,6 +137,31 @@ export async function retrieveMemoryContext(params: {
     }));
   }
 
+  if (topicHints.length > 0) {
+    legacyResults = legacyResults
+      .map((result) => {
+        const topicLabel =
+          typeof result.node.metadata?.topicLabel === "string"
+            ? result.node.metadata.topicLabel.toLowerCase()
+            : "";
+        const hasTopicMatch = topicHints.some((hint) => topicLabel.includes(hint));
+        const assetType =
+          typeof result.node.metadata?.assetType === "string"
+            ? result.node.metadata.assetType.toLowerCase()
+            : "";
+        const timelineBucket =
+          typeof result.node.metadata?.timelineBucket === "string"
+            ? result.node.metadata.timelineBucket
+            : "";
+        const bonus =
+          (hasTopicMatch ? 0.1 : 0) +
+          (assetType ? 0.05 : 0) +
+          (timelineBucket ? 0.03 : 0);
+        return { ...result, similarity: Math.min(0.99, result.similarity + bonus) };
+      })
+      .sort((a, b) => b.similarity - a.similarity);
+  }
+
   await touchMemoriesAccessed(
     params.db,
     memories.map((memory) => memory.id)
@@ -162,6 +193,7 @@ export async function retrieveMemoryContext(params: {
       title: result.node.title,
       summary: result.node.summary,
       type: result.node.type,
+      metadata: result.node.metadata,
       similarity: result.similarity,
       importance:
         typeof result.node.metadata?.importance === "number"
@@ -187,6 +219,7 @@ export async function retrieveMemoryContext(params: {
       title: memory.title ?? null,
       summary: memory.summary,
       type: memory.type,
+      metadata: memory.metadata,
       similarity: memory.similarity,
     })),
   };

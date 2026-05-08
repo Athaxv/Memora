@@ -28,6 +28,14 @@ interface MemoryDetail {
     edgeType: string;
     weight: number;
   }[];
+  asset?: {
+    status: "available" | "unavailable";
+    url?: string;
+    mimeType?: string;
+    size?: number;
+    name?: string;
+    reason?: string;
+  };
 }
 
 function CornerAccents() {
@@ -141,6 +149,30 @@ export default function MemoryDetailPage() {
               </a>
             )}
           </div>
+
+          {/* AI Summary */}
+          {memory.asset && (
+            <div className="relative border border-zinc-200/80 bg-white p-8">
+              <CornerAccents />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-900 mb-3">
+                Uploaded Asset
+              </h3>
+              {memory.asset.status === "available" && memory.asset.url ? (
+                <a
+                  href={memory.asset.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate text-[13px] font-bold text-zinc-900 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900"
+                >
+                  {memory.asset.name || "Open uploaded file"}
+                </a>
+              ) : (
+                <p className="text-[13px] font-medium text-zinc-500">
+                  Original file unavailable for older upload.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* AI Summary */}
           {memory.summary && (

@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, inArray, isNull, lte, sql } from "drizzle-orm";
-import { conversations, edges, messages, nodeTags, nodes, tags } from "@repo/db/schema";
+import { conversations, edges, messages, nodeTags, nodes, tags, users } from "@repo/db/schema";
 import type { Database } from "@repo/db/client";
 import { generateEmbedding } from "@repo/ai/embeddings";
 import { extractMemoryCandidates, type MemoryCandidate } from "@repo/memory";
@@ -14,24 +14,35 @@ import { canWriteMemory, isDurableMemoryText } from "./memory-policy";
 
 export interface MemoryGraphNode {
   id: string;
-  kind: "memory" | "root";
+  kind: "root" | "topic" | "timeline" | "memory" | "asset";
   content: string | null;
   summary: string;
   tags: string[];
   importance: number;
   createdAt: string;
   source: string;
+  parentId: string | null;
+  depth: number;
+  topicId: string;
   embedding?: number[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface MemoryGraphEdge {
   id: string;
   source: string;
   target: string;
-  type: "root" | "semantic" | "tag" | "temporal";
+  type: "tree" | "cross";
+  relationType:
+    | "root_link"
+    | "topic_link"
+    | "timeline_link"
+    | "asset_link"
+    | "semantic"
+    | "tag"
+    | "temporal";
   weight: number;
   reasons: {
-    root?: number;
     semantic?: number;
     tag?: number;
     temporal?: number;
@@ -59,13 +70,16 @@ type CandidateEdge = {
   temporal?: number;
 };
 
+type TopicInfo = {
+  topicId: string;
+  topicLabel: string;
+};
+
 const DEFAULT_NODE_LIMIT = 50;
 const DEFAULT_EDGE_LIMIT_PER_NODE = 3;
 const TEMPORAL_WINDOW_HOURS = 48;
 const TEMPORAL_NEIGHBORS = 2;
 const CANDIDATE_MULTIPLIER = 4;
-const MAX_ROOTS = 6;
-
 function clamp01(value: number): number {
   if (Number.isNaN(value)) return 0;
   if (value < 0) return 0;
@@ -83,17 +97,6 @@ function edgeId(prefix: string, source: string, target: string): string {
 
 function normalizeTag(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, " ");
-}
-
-function rootIdFromLabel(label: string): string {
-  return `root:${label.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase()}`;
-}
-
-function toTitleCase(label: string): string {
-  return label
-    .split(" ")
-    .map((part) => (part.length ? `${part[0]!.toUpperCase()}${part.slice(1)}` : part))
-    .join(" ");
 }
 
 function recencyScore(createdAt: Date): number {
@@ -119,6 +122,62 @@ function usageScore(usageCount: number, maxUsage: number): number {
   return clamp01(Math.log1p(usageCount) / Math.log1p(maxUsage));
 }
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+function inferTopicLabel(params: {
+  tags: string[];
+  summary: string | null;
+  title: string | null;
+  source: string | null;
+  metadata?: Record<string, unknown> | null;
+}): string {
+  const explicit =
+    typeof params.metadata?.topicLabel === "string" ? params.metadata.topicLabel.trim() : "";
+  if (explicit) return explicit;
+  if (params.tags.length > 0) return params.tags[0]!;
+  if (params.source === "upload") return "uploaded-content";
+  const seed = (params.summary ?? params.title ?? "general").trim().toLowerCase();
+  const words = seed
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !["the", "and", "for", "with", "that", "this"].includes(w))
+    .slice(0, 2);
+  return words.length > 0 ? words.join(" ") : "general";
+}
+
+function buildTopicInfo(params: {
+  tags: string[];
+  summary: string | null;
+  title: string | null;
+  source: string | null;
+  metadata?: Record<string, unknown> | null;
+}): TopicInfo {
+  const label = inferTopicLabel(params);
+  return {
+    topicId: `topic:${slugify(label) || "general"}`,
+    topicLabel: label,
+  };
+}
+
+function toTimelineBucket(value: unknown, createdAt: Date): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  const utc = new Date(Date.UTC(createdAt.getUTCFullYear(), createdAt.getUTCMonth(), createdAt.getUTCDate()));
+  const day = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((utc.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return `${utc.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function timelineId(topicId: string, bucket: string, sessionHint: string): string {
+  return `timeline:${slugify(topicId)}:${slugify(bucket)}:${slugify(sessionHint)}`;
+}
+
 export async function getMemoryGraph(
   db: Database,
   userId: string,
@@ -139,6 +198,7 @@ export async function getMemoryGraph(
       summary: nodes.summary,
       title: nodes.title,
       source: nodes.source,
+      metadata: nodes.metadata,
       embedding: nodes.embedding,
       createdAt: nodes.createdAt,
     })
@@ -358,10 +418,16 @@ export async function getMemoryGraph(
 
   const degree = new Map<string, number>();
   const maxEdges = Math.max(20, Math.min(selectedNodes.length * 2, 120));
-  const selected: MemoryGraphEdge[] = [];
+  const relationEdges: Array<{
+    source: string;
+    target: string;
+    relationType: "semantic" | "tag" | "temporal";
+    weight: number;
+    reasons: MemoryGraphEdge["reasons"];
+  }> = [];
 
   for (const { edge, type, score } of rankedEdges) {
-    if (selected.length >= maxEdges) break;
+    if (relationEdges.length >= maxEdges) break;
 
     const srcDegree = degree.get(edge.source) ?? 0;
     const dstDegree = degree.get(edge.target) ?? 0;
@@ -370,11 +436,10 @@ export async function getMemoryGraph(
     degree.set(edge.source, srcDegree + 1);
     degree.set(edge.target, dstDegree + 1);
 
-    selected.push({
-      id: edgeId("rel", edge.source, edge.target),
+    relationEdges.push({
       source: edge.source,
       target: edge.target,
-      type,
+      relationType: type,
       weight: Number(score.toFixed(4)),
       reasons: {
         semantic: edge.semantic,
@@ -384,87 +449,336 @@ export async function getMemoryGraph(
     });
   }
 
-  const tagFrequency = new Map<string, number>();
+  const adjacency = new Map<string, typeof relationEdges>();
+  for (const edge of relationEdges) {
+    const sourceList = adjacency.get(edge.source) ?? [];
+    sourceList.push(edge);
+    adjacency.set(edge.source, sourceList);
+
+    const targetList = adjacency.get(edge.target) ?? [];
+    targetList.push(edge);
+    adjacency.set(edge.target, targetList);
+  }
+
+  const orderedNodes = [...selectedNodes].sort(
+    (a, b) => b.importance - a.importance || b.createdAt.getTime() - a.createdAt.getTime()
+  );
+
+  const topicByNode = new Map<string, TopicInfo>();
   for (const node of selectedNodes) {
-    for (const tag of node.tags) {
-      tagFrequency.set(tag, (tagFrequency.get(tag) ?? 0) + 1);
+    topicByNode.set(
+      node.id,
+      buildTopicInfo({
+        tags: node.tags,
+        summary: node.summary,
+        title: node.title,
+        source: node.source,
+        metadata: (node.metadata ?? null) as Record<string, unknown> | null,
+      })
+    );
+  }
+
+  const parentByNode = new Map<string, string | null>();
+  const depthByNode = new Map<string, number>();
+  const topicIdByNode = new Map<string, string>();
+  const treeKeySet = new Set<string>();
+  const assignedByTopic = new Map<string, Set<string>>();
+  const unassignedByTopic = new Map<string, Set<string>>();
+  const orderedByTopic = new Map<string, typeof orderedNodes>();
+  const treeEdges: MemoryGraphEdge[] = [];
+
+  const topicIds = new Set<string>();
+  for (const node of orderedNodes) {
+    const topic = topicByNode.get(node.id) ?? { topicId: "topic:general", topicLabel: "general" };
+    topicIds.add(topic.topicId);
+    topicIdByNode.set(node.id, topic.topicId);
+    if (!assignedByTopic.has(topic.topicId)) {
+      assignedByTopic.set(topic.topicId, new Set<string>());
+      unassignedByTopic.set(topic.topicId, new Set<string>());
+      orderedByTopic.set(topic.topicId, []);
+    }
+    assignedByTopic.get(topic.topicId)!.add(node.id);
+    unassignedByTopic.get(topic.topicId)!.add(node.id);
+    orderedByTopic.get(topic.topicId)!.push(node);
+  }
+
+  for (const topicId of topicIds) {
+    const topicAssigned = new Set<string>();
+    const topicUnassigned = new Set(unassignedByTopic.get(topicId)!);
+    const topicOrdered = orderedByTopic.get(topicId)!;
+    const seed = topicOrdered.find((node) => topicUnassigned.has(node.id));
+    if (!seed) continue;
+
+    topicAssigned.add(seed.id);
+    topicUnassigned.delete(seed.id);
+    parentByNode.set(seed.id, topicId);
+    depthByNode.set(seed.id, 2);
+
+    while (topicUnassigned.size > 0) {
+      let best:
+        | {
+            source: string;
+            target: string;
+            relationType: "semantic" | "tag" | "temporal";
+            weight: number;
+            reasons: MemoryGraphEdge["reasons"];
+          }
+        | null = null;
+
+      for (const currentId of topicAssigned) {
+        const neighbors = adjacency.get(currentId) ?? [];
+        for (const edge of neighbors) {
+          const otherId = edge.source === currentId ? edge.target : edge.source;
+          if (!topicUnassigned.has(otherId)) continue;
+          if ((topicIdByNode.get(otherId) ?? "") !== topicId) continue;
+          if (!best || edge.weight > best.weight) {
+            best = {
+              source: currentId,
+              target: otherId,
+              relationType: edge.relationType,
+              weight: edge.weight,
+              reasons: edge.reasons,
+            };
+          }
+        }
+      }
+
+      if (!best) {
+        const nextSeed = topicOrdered.find((node) => topicUnassigned.has(node.id));
+        if (!nextSeed) break;
+        topicAssigned.add(nextSeed.id);
+        topicUnassigned.delete(nextSeed.id);
+        parentByNode.set(nextSeed.id, topicId);
+        depthByNode.set(nextSeed.id, 2);
+        continue;
+      }
+
+      topicAssigned.add(best.target);
+      topicUnassigned.delete(best.target);
+      parentByNode.set(best.target, best.source);
+      depthByNode.set(best.target, (depthByNode.get(best.source) ?? 2) + 1);
+
+      const treeKey = pairKey(best.source, best.target);
+      treeKeySet.add(treeKey);
+      treeEdges.push({
+        id: edgeId("tree", best.source, best.target),
+        source: best.source,
+        target: best.target,
+        type: "tree",
+        relationType: best.relationType,
+        weight: best.weight,
+        reasons: best.reasons,
+      });
     }
   }
 
-  const rootLabels = [...tagFrequency.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .filter(([, count]) => count >= 2)
-    .slice(0, MAX_ROOTS)
-    .map(([tag]) => tag);
+  const crossEdges: MemoryGraphEdge[] = relationEdges
+    .filter((edge) => !treeKeySet.has(pairKey(edge.source, edge.target)))
+    .slice(0, Math.max(15, Math.min(40, selectedNodes.length)))
+    .map((edge) => ({
+      id: edgeId("cross", edge.source, edge.target),
+      source: edge.source,
+      target: edge.target,
+      type: "cross",
+      relationType: edge.relationType,
+      weight: edge.weight,
+      reasons: edge.reasons,
+    }));
 
-  if (rootLabels.length === 0) {
-    rootLabels.push("general");
-  }
-
-  const rootLoad = new Map(rootLabels.map((label) => [label, 0]));
-  const rootAssignments = new Map<string, string>();
-
-  for (const node of selectedNodes) {
-    const candidateRoots = rootLabels.filter((root) => node.tags.includes(root));
-    const pool = candidateRoots.length > 0 ? candidateRoots : rootLabels;
-
-    pool.sort((a, b) => {
-      const loadDiff = (rootLoad.get(a) ?? 0) - (rootLoad.get(b) ?? 0);
-      if (loadDiff !== 0) return loadDiff;
-      return (tagFrequency.get(b) ?? 0) - (tagFrequency.get(a) ?? 0);
-    });
-
-    const assignedRoot = pool[0]!;
-    rootAssignments.set(node.id, assignedRoot);
-    rootLoad.set(assignedRoot, (rootLoad.get(assignedRoot) ?? 0) + 1);
-  }
-
-  const nowIso = new Date().toISOString();
-  const rootNodes: MemoryGraphNode[] = rootLabels.map((label) => {
-    const rootId = rootIdFromLabel(label);
-    const load = rootLoad.get(label) ?? 0;
-
+  const memoryNodes: MemoryGraphNode[] = selectedNodes.map((n) => {
+    const topic = topicByNode.get(n.id) ?? { topicId: "topic:general", topicLabel: "general" };
+    const nodeMetadata = (n.metadata ?? null) as Record<string, unknown> | null;
+    const bucket = toTimelineBucket(nodeMetadata?.timelineBucket, n.createdAt);
+    const sessionHint =
+      typeof nodeMetadata?.createdFrom === "string" && nodeMetadata.createdFrom
+        ? nodeMetadata.createdFrom
+        : "timeline";
+    const parentTimelineId = timelineId(topic.topicId, bucket, sessionHint);
     return {
-      id: rootId,
-      kind: "root",
-      content: `${load} linked memories`,
-      summary: toTitleCase(label),
-      tags: [label],
-      importance: 1,
-      createdAt: nowIso,
-      source: "cluster",
+      id: n.id,
+      kind: "memory",
+      content: n.content ?? null,
+      summary: n.summary ?? n.title ?? "Untitled memory",
+      tags: n.tags.slice(0, 6),
+      importance: Number(n.importance.toFixed(4)),
+      createdAt: n.createdAt.toISOString(),
+      source: n.source ?? "manual",
+      parentId: parentTimelineId,
+      depth: 3,
+      topicId: topic.topicId,
+      embedding: n.embedding ?? undefined,
+      metadata: nodeMetadata ?? undefined,
     };
   });
 
-  const rootEdges: MemoryGraphEdge[] = selectedNodes.map((node) => {
-    const rootLabel = rootAssignments.get(node.id) ?? "general";
-    const rootId = rootIdFromLabel(rootLabel);
+  const [user] = await db
+    .select({
+      name: users.name,
+      email: users.email,
+      onboardingCompleted: users.onboardingCompleted,
+      socialLinks: users.socialLinks,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
-    return {
-      id: edgeId("root", rootId, node.id),
-      source: rootId,
-      target: node.id,
-      type: "root",
-      weight: 1,
-      reasons: { root: 1 },
-    };
-  });
+  const rootId = `root:user:${userId}`;
+  const topicNodeMap = new Map<string, MemoryGraphNode>();
+  for (const node of memoryNodes) {
+    const topicLabel = (topicByNode.get(node.id)?.topicLabel ?? node.tags[0] ?? "general").trim();
+    if (!topicNodeMap.has(node.topicId)) {
+      topicNodeMap.set(node.topicId, {
+        id: node.topicId,
+        kind: "topic",
+        content: `Topic branch: ${topicLabel}`,
+        summary: topicLabel,
+        tags: [topicLabel],
+        importance: 0.85,
+        createdAt: new Date().toISOString(),
+        source: "topic-router",
+        parentId: rootId,
+        depth: 1,
+        topicId: node.topicId,
+      });
+    }
+  }
 
-  const memoryNodes: MemoryGraphNode[] = selectedNodes.map((n) => ({
-    id: n.id,
-    kind: "memory",
-    content: n.content ?? null,
-    summary: n.summary ?? n.title ?? "Untitled memory",
-    tags: n.tags.slice(0, 6),
-    importance: Number(n.importance.toFixed(4)),
-    createdAt: n.createdAt.toISOString(),
-    source: n.source ?? "manual",
-    embedding: n.embedding ?? undefined,
+  const rootNode: MemoryGraphNode = {
+    id: rootId,
+    kind: "root",
+    content: user?.name ?? "User",
+    summary: "User Root",
+    tags: ["root", "profile"],
+    importance: 1,
+    createdAt: new Date().toISOString(),
+    source: "onboarding",
+    parentId: null,
+    depth: 0,
+    topicId: rootId,
+    metadata: {
+      name: user?.name ?? null,
+      email: user?.email ?? null,
+      onboardingCompleted: user?.onboardingCompleted ?? false,
+      socialLinks: user?.socialLinks ?? null,
+    },
+  };
+
+  const topicEdges: MemoryGraphEdge[] = [...topicNodeMap.values()].map((topicNode) => ({
+    id: edgeId("topic", rootId, topicNode.id),
+    source: rootId,
+    target: topicNode.id,
+    type: "tree",
+    relationType: "topic_link",
+    weight: 1,
+    reasons: {},
   }));
 
+  const timelineNodeMap = new Map<string, MemoryGraphNode>();
+  for (const memory of memoryNodes) {
+    const meta = memory.metadata ?? {};
+    const bucket = toTimelineBucket(meta.timelineBucket, new Date(memory.createdAt));
+    const sessionHint =
+      typeof meta.createdFrom === "string" && meta.createdFrom ? meta.createdFrom : "timeline";
+    const tId = timelineId(memory.topicId, bucket, sessionHint);
+    if (!timelineNodeMap.has(tId)) {
+      timelineNodeMap.set(tId, {
+        id: tId,
+        kind: "timeline",
+        content: `${bucket} · ${sessionHint}`,
+        summary: `Timeline ${bucket}`,
+        tags: [bucket],
+        importance: 0.72,
+        createdAt: memory.createdAt,
+        source: "timeline-router",
+        parentId: memory.topicId,
+        depth: 2,
+        topicId: memory.topicId,
+        metadata: {
+          timelineBucket: bucket,
+          sessionHint,
+        },
+      });
+    }
+  }
+
+  const timelineEdges: MemoryGraphEdge[] = [...timelineNodeMap.values()].map((timelineNode) => ({
+    id: edgeId("timeline", timelineNode.topicId, timelineNode.id),
+    source: timelineNode.topicId,
+    target: timelineNode.id,
+    type: "tree",
+    relationType: "timeline_link",
+    weight: 0.95,
+    reasons: {},
+  }));
+
+  const timelineLeafEdges: MemoryGraphEdge[] = memoryNodes.map((node) => ({
+    id: edgeId("timeline-leaf", node.parentId ?? node.topicId, node.id),
+    source: node.parentId ?? node.topicId,
+    target: node.id,
+    type: "tree",
+    relationType: "timeline_link",
+    weight: 0.88,
+    reasons: {},
+  }));
+
+  const assetNodes: MemoryGraphNode[] = [];
+  const assetEdges: MemoryGraphEdge[] = [];
+  for (const node of memoryNodes) {
+    const meta = (node.metadata ?? {}) as Record<string, unknown>;
+    const isNewAsset = Number(meta.assetNodeVersion ?? 0) >= 2;
+    if (!isNewAsset) continue;
+    const assetType = typeof meta.assetType === "string" ? meta.assetType : "";
+    if (!["document", "image", "link", "tweet", "web_link", "media"].includes(assetType)) continue;
+    const assetId = `asset:${node.id}`;
+    assetNodes.push({
+      id: assetId,
+      kind: "asset",
+      content:
+        typeof meta.assetPublicUrl === "string"
+          ? meta.assetPublicUrl
+          : typeof meta.sourceUrl === "string"
+            ? meta.sourceUrl
+            : node.content,
+      summary: typeof meta.assetOriginalName === "string" ? meta.assetOriginalName : node.summary,
+      tags: [assetType],
+      importance: Math.max(0.6, node.importance - 0.08),
+      createdAt: node.createdAt,
+      source: "asset",
+      parentId: node.parentId,
+      depth: node.depth,
+      topicId: node.topicId,
+      metadata: {
+        ...meta,
+        graphNodeType: "asset",
+      },
+    });
+    assetEdges.push({
+      id: edgeId("asset", node.id, assetId),
+      source: node.id,
+      target: assetId,
+      type: "cross",
+      relationType: "asset_link",
+      weight: 0.92,
+      reasons: {},
+    });
+  }
+
   return {
-    nodes: [...rootNodes, ...memoryNodes],
-    edges: [...rootEdges, ...selected],
+    nodes: [
+      rootNode,
+      ...topicNodeMap.values(),
+      ...timelineNodeMap.values(),
+      ...memoryNodes,
+      ...assetNodes,
+    ],
+    edges: [
+      ...topicEdges,
+      ...timelineEdges,
+      ...timelineLeafEdges,
+      ...treeEdges,
+      ...crossEdges,
+      ...assetEdges,
+    ],
   };
 }
 
@@ -544,6 +858,19 @@ function memoryTitle(memory: StructuredMemory): string {
   return `${entityPrefix}${memory.type}`.slice(0, 120);
 }
 
+function resolveTopicFromMemory(memory: StructuredMemory): TopicInfo {
+  const source = `${memory.entity} ${memory.content}`.toLowerCase();
+  if (/\bgate\b/.test(source)) return { topicId: "topic:gate", topicLabel: "gate" };
+  if (/\b(dbms|os|operating systems|education|exam)\b/.test(source)) {
+    return { topicId: "topic:education", topicLabel: "education" };
+  }
+  if (/\b(interview|communication|career)\b/.test(source)) {
+    return { topicId: "topic:career", topicLabel: "career" };
+  }
+  const label = memory.type === "preference" ? "preferences" : memory.type;
+  return { topicId: `topic:${slugify(label) || "general"}`, topicLabel: label };
+}
+
 async function findBestSimilarityMatch(
   deps: GraphMutationDeps,
   memory: StructuredMemory
@@ -596,6 +923,9 @@ export async function createNode(
     source: "decision-engine",
     embedding: embedding ?? undefined,
     metadata: {
+      topicId: resolveTopicFromMemory(memory).topicId,
+      topicLabel: resolveTopicFromMemory(memory).topicLabel,
+      branchPath: [resolveTopicFromMemory(memory).topicId],
       memoryType: memory.type,
       entity: memory.entity,
       importance: memory.importance,
@@ -614,6 +944,12 @@ export async function updateNode(
   }
   const metadata = {
     ...(existingNode.metadata ?? {}),
+    topicId:
+      (existingNode.metadata as Record<string, unknown> | null)?.topicId ??
+      resolveTopicFromMemory(memory).topicId,
+    topicLabel:
+      (existingNode.metadata as Record<string, unknown> | null)?.topicLabel ??
+      resolveTopicFromMemory(memory).topicLabel,
     memoryType: memory.type,
     entity: memory.entity,
     importance: Math.max(

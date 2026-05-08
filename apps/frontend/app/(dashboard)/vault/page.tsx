@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import { VaultSearchBar } from "@/app/components/vault/vault-search-bar";
 import { RecentItems } from "@/app/components/vault/recent-items";
 import { EmptyState } from "@/app/components/vault/empty-state";
+import { UniversalCapture } from "@/app/components/upload/universal-capture";
+import { Upload } from "lucide-react";
 
 interface MemoryNode {
   id: string;
@@ -23,6 +25,7 @@ export default function VaultPage() {
   const [initialLoad, setInitialLoad] = useState(true);
   const [searchMode, setSearchMode] = useState(false);
   const [savingUrl, setSavingUrl] = useState(false);
+  const [captureOpen, setCaptureOpen] = useState(false);
 
   const fetchMemories = useCallback(async (cursor?: string) => {
     setLoading(true);
@@ -52,7 +55,7 @@ export default function VaultPage() {
     setSavingUrl(true);
     await api("/ingest", {
       method: "POST",
-      body: JSON.stringify({ type: "url", content: url }),
+      body: JSON.stringify({ type: "url", content: url, createdFrom: "vault" }),
     });
     setSavingUrl(false);
     setSearchMode(false);
@@ -86,6 +89,31 @@ export default function VaultPage() {
     <div className="flex h-full flex-col bg-white">
       <main className="flex-1 px-4 md:px-6 py-4 md:py-0">
         <VaultSearchBar onSave={handleSave} onSearch={handleSearch} />
+
+        <div className="mx-auto -mt-6 mb-6 flex max-w-[640px] justify-end">
+          <button
+            type="button"
+            onClick={() => setCaptureOpen((open) => !open)}
+            className="flex items-center gap-2 border border-zinc-200 bg-white px-3 py-2 text-[12px] font-bold text-zinc-700 transition-colors hover:border-zinc-900 hover:text-zinc-900"
+          >
+            <Upload size={14} />
+            Upload
+          </button>
+        </div>
+
+        {captureOpen && (
+          <div className="mx-auto mb-6 w-full max-w-[640px]">
+            <UniversalCapture
+              createdFrom="vault"
+              onCancel={() => setCaptureOpen(false)}
+              onCaptured={() => {
+                setCaptureOpen(false);
+                setSearchMode(false);
+                fetchMemories();
+              }}
+            />
+          </div>
+        )}
 
         {/* Saving indicator */}
         {savingUrl && (

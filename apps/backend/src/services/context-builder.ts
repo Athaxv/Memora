@@ -11,6 +11,7 @@ export async function buildChatContext(params: {
     title: string | null;
     summary: string | null;
     type: string;
+    metadata?: Record<string, unknown> | null;
     similarity: number;
   }>;
   webResults?: Array<{
@@ -29,11 +30,50 @@ export async function buildChatContext(params: {
     .join("\n\n");
 
   const legacyMemoryContext = params.legacyNodes
-    .map(
-      (memory) =>
-        `[Legacy ${memory.id}] ${memory.title || "Untitled"}\n${memory.summary || ""}\nsimilarity=${memory.similarity.toFixed(2)}`
-    )
+    .map((memory) => {
+      const metadata = memory.metadata
+        ? Object.entries(memory.metadata)
+            .filter(([, value]) => value !== undefined && value !== null)
+            .slice(0, 12)
+            .map(([key, value]) =>
+              Array.isArray(value) ? `${key}=${value.join(", ")}` : `${key}=${String(value)}`
+            )
+            .join("; ")
+        : "";
+
+      return `[Legacy ${memory.id}] ${memory.title || "Untitled"}\n${
+        memory.summary || ""
+      }\ntype=${memory.type}\nmetadata=${metadata || "none"}\nsimilarity=${memory.similarity.toFixed(
+        2
+      )}`;
+    })
     .join("\n\n");
+
+  const topicHints = params.legacyNodes
+    .map((node) =>
+      typeof node.metadata?.topicLabel === "string" ? node.metadata.topicLabel : null
+    )
+    .filter((value): value is string => !!value)
+    .slice(0, 8);
+
+  const assetContext = params.legacyNodes
+    .filter((node) => typeof node.metadata?.assetType === "string")
+    .slice(0, 8)
+    .map((node) => {
+      const assetType = String(node.metadata?.assetType);
+      const url =
+        typeof node.metadata?.assetPublicUrl === "string"
+          ? node.metadata.assetPublicUrl
+          : typeof node.metadata?.sourceUrl === "string"
+            ? node.metadata.sourceUrl
+            : "";
+      const timeline =
+        typeof node.metadata?.timelineBucket === "string" ? node.metadata.timelineBucket : "n/a";
+      return `- [${assetType}] ${node.title || node.summary || node.id} timeline=${timeline}${
+        url ? ` url=${url}` : ""
+      }`;
+    })
+    .join("\n");
 
   const sessionContext = sessionState
     ? `Session summary: ${sessionState.summary || "N/A"}\nActive topics: ${
@@ -56,6 +96,8 @@ export async function buildChatContext(params: {
       normalizedMemoryContext || "No normalized memories."
     }\n\nLegacy graph context:\n${legacyMemoryContext || "No legacy graph matches."}\n\nWeb context:\n${
       webContext || "No web sources."
+    }\n\nTopic hints:\n${topicHints.join(", ") || "none"}\n\nAsset context:\n${
+      assetContext || "none"
     }\n\nConversation state:\n${sessionContext}`,
   };
 }

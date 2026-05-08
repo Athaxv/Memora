@@ -18,6 +18,34 @@ import { db } from "../../db";
 import { config } from "../../config";
 import { getMemoryGraph } from "../../services/memory-graph";
 
+function toAsset(metadata: Record<string, unknown> | null | undefined) {
+  const objectKey = typeof metadata?.assetObjectKey === "string" ? metadata.assetObjectKey : null;
+  const publicUrl = typeof metadata?.assetPublicUrl === "string" ? metadata.assetPublicUrl : null;
+  const mimeType = typeof metadata?.assetMimeType === "string" ? metadata.assetMimeType : null;
+  const size = typeof metadata?.assetSize === "number" ? metadata.assetSize : null;
+  const name =
+    typeof metadata?.assetOriginalName === "string" ? metadata.assetOriginalName : null;
+
+  if (objectKey || publicUrl || mimeType || size || name) {
+    return {
+      status: publicUrl ? "available" : "unavailable",
+      url: publicUrl ?? undefined,
+      mimeType: mimeType ?? undefined,
+      size: size ?? undefined,
+      name: name ?? undefined,
+      reason: publicUrl ? undefined : "legacy_upload_no_binary",
+    };
+  }
+  return undefined;
+}
+
+function decorateNodeWithAsset<T extends { metadata: Record<string, unknown> | null }>(node: T) {
+  return {
+    ...node,
+    asset: toAsset(node.metadata),
+  };
+}
+
 export async function memoriesRoutes(app: FastifyInstance) {
   // All routes require auth
   app.addHook("preHandler", app.authenticate);
@@ -43,7 +71,10 @@ export async function memoriesRoutes(app: FastifyInstance) {
       dateTo,
     });
 
-    return reply.send(result);
+    return reply.send({
+      ...result,
+      nodes: result.nodes.map((node) => decorateNodeWithAsset(node)),
+    });
   });
 
   // POST /memories/search — semantic search
@@ -77,7 +108,10 @@ export async function memoriesRoutes(app: FastifyInstance) {
             summary: r.node.summary,
             type: r.node.type,
             source: r.node.source,
+            sourceUrl: r.node.sourceUrl,
+            metadata: r.node.metadata,
             createdAt: r.node.createdAt,
+            asset: toAsset(r.node.metadata),
           },
           similarity: r.similarity,
         })),
@@ -132,7 +166,7 @@ export async function memoriesRoutes(app: FastifyInstance) {
     ]);
 
     return reply.send({
-      ...node,
+      ...decorateNodeWithAsset(node),
       tags: nodeTags,
       related: related.map((r) => ({
         node: {
