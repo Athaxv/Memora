@@ -4,6 +4,7 @@ export { extractMemoryCandidates } from "./extractor";
 export { mergeMemoryCandidates, touchMemoriesAccessed } from "./manager";
 export { processPostTurnMemory } from "./orchestrator";
 export { searchMemories } from "./search";
+export { resolveLegacyNodeIdsForMemoryRecords } from "./resolve-legacy-node";
 export type {
   Artifact,
   ConversationState,
