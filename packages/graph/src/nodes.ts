@@ -72,7 +72,7 @@ export async function listNodes(
 
   if (opts.search) {
     conditions.push(
-      sql`(${ilike(nodes.title, `%${opts.search}%`)} OR ${ilike(nodes.content, `%${opts.search}%`)})`
+      sql`(${ilike(nodes.title, `%${opts.search}%`)} OR ${ilike(nodes.content, `%${opts.search}%`)} OR ${ilike(nodes.summary, `%${opts.search}%`)} OR ${nodes.metadata}::text ILIKE ${`%${opts.search}%`})`
     );
   }
 
