@@ -269,3 +269,15 @@
 - Prompt context wiring:
 	- [apps/backend/src/services/context-builder.ts](apps/backend/src/services/context-builder.ts) now includes a dedicated `Web context` section.
 	- [apps/backend/src/services/reasoning-service.ts](apps/backend/src/services/reasoning-service.ts) system prompt now explicitly handles optional web context and source citation behavior.
+
+## Implementation notes (2026-05-08, universal upload/capture metadata)
+- Added universal capture UI in [apps/frontend/app/components/upload/universal-capture.tsx](apps/frontend/app/components/upload/universal-capture.tsx) for files, links, tweet/X URLs, and notes.
+- Wired capture into [apps/frontend/app/(dashboard)/vault/page.tsx](apps/frontend/app/(dashboard)/vault/page.tsx) with a Vault upload panel that refreshes the memory list after ingestion.
+- Wired capture into [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx) with an attachment button and local uploaded-memory feedback.
+- Updated [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx) so the attachment button opens the native file picker directly instead of showing the universal capture panel.
+- Fixed [apps/frontend/app/(dashboard)/memory-graph/page.tsx](apps/frontend/app/(dashboard)/memory-graph/page.tsx) to call `GET /memories/graph`, matching the backend route.
+- Extended ingestion inputs in [packages/ingestion/src/types.ts](packages/ingestion/src/types.ts) and [packages/validators/src/index.ts](packages/validators/src/index.ts) with `createdFrom` and optional metadata.
+- Added [packages/ingestion/src/metadata.ts](packages/ingestion/src/metadata.ts) to classify source kind (`note`, `document`, `image`, `tweet`, `web_link`, `csv`, `markdown`) and produce searchable artifact/node metadata.
+- Updated [packages/ingestion/src/pipeline.ts](packages/ingestion/src/pipeline.ts) so metadata is stored on both `artifacts` and legacy graph `nodes`, included in embedding text, and linked via `artifactId`.
+- Updated graph fallback search in [packages/graph/src/nodes.ts](packages/graph/src/nodes.ts) to search title, content, summary, and node metadata JSON text.
+- Updated chat retrieval/context in [apps/backend/src/services/retrieval-service.ts](apps/backend/src/services/retrieval-service.ts) and [apps/backend/src/services/context-builder.ts](apps/backend/src/services/context-builder.ts) so uploaded document metadata is available to grounded replies.

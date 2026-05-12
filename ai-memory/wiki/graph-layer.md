@@ -8,6 +8,7 @@ The graph layer encapsulates node CRUD, edge creation, semantic search, traversa
 - Semantic edges are created between similar nodes using embeddings and a threshold.
 - Visualization payloads can combine persisted semantic edges with derived tag-overlap and temporal-proximity edges at read time.
 - Search uses pgvector cosine distance and supports limits and type filters.
+- Fallback list/search now checks node title, content, summary, and metadata JSON text so uploaded document metadata is queryable even without embeddings.
 - Tags are upserted and attached to nodes via a junction table.
 - Traversal returns related nodes and the associated edge metadata.
 

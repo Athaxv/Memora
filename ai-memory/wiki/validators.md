@@ -6,6 +6,7 @@ Request validation is centralized in a shared Zod schema package used by the bac
 ## Detailed explanation
 - Schemas cover signup/login, ingestion, node updates, search, chat, profile updates, WhatsApp linking, and Telegram linking.
 - Signup/login email fields are normalized (trim + lowercase) at validation time to enforce canonical identity handling.
+- Ingest validation accepts optional `createdFrom` and metadata fields for Vault/Chat capture provenance.
 - Chat schema already supports optional `conversationId`, which is now used by the backend for conversation continuity and persistence.
 - Backend routes parse and validate requests using these schemas before accessing the database.
 

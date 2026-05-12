@@ -6,6 +6,8 @@ The primary UI is a Next.js app in apps/frontend that renders the dashboard, onb
 ## Detailed explanation
 - The app uses the App Router and a shared API wrapper that retries on 401 by refreshing the session.
 - Dashboard, vault, chat, onboarding, and auth routes live under the app directory structure.
+- Vault includes a reusable universal capture panel for files, links, tweet/X URLs, and notes; successful captures refresh the recent memory list.
+- Chat includes an attachment button that opens the native file picker directly and shows local uploaded-memory feedback with a reference to the created memory node.
 - Dashboard includes a Memory Graph page at `/memory-graph` that visualizes memory nodes and relationships from `GET /memories/graph`.
 - The UI does not define Next.js API routes; it relies on the Fastify backend for data and auth.
 
@@ -24,3 +26,6 @@ The primary UI is a Next.js app in apps/frontend that renders the dashboard, onb
 - [apps/frontend/app/(onboarding)](apps/frontend/app/(onboarding))
 - [apps/frontend/lib/api.ts](apps/frontend/lib/api.ts)
 - [apps/frontend/app/components/dashboard/sidebar.tsx](apps/frontend/app/components/dashboard/sidebar.tsx)
+- [apps/frontend/app/components/upload/universal-capture.tsx](apps/frontend/app/components/upload/universal-capture.tsx)
+- [apps/frontend/app/(dashboard)/vault/page.tsx](apps/frontend/app/(dashboard)/vault/page.tsx)
+- [apps/frontend/app/components/chat/chat-interface.tsx](apps/frontend/app/components/chat/chat-interface.tsx)

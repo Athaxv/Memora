@@ -8,6 +8,8 @@ The API layer is a cookie-authenticated HTTP interface served by Fastify and con
 - Auth uses access and refresh cookies; the frontend always sends credentials.
 - The frontend API client retries once on 401 by calling /auth/refresh, then replays the original request.
 - File uploads are multipart and validated for size and MIME types.
+- `POST /ingest` accepts `createdFrom` and optional metadata for text/URL captures.
+- `POST /ingest/upload` accepts multipart fields for tags, title, createdFrom, and JSON metadata in addition to the file.
 
 ## Relationships
 - [ai-memory/wiki/backend-api.md](ai-memory/wiki/backend-api.md) - Detailed route responsibilities.

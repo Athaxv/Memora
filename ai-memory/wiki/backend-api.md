@@ -9,7 +9,10 @@ The backend is a Fastify server that exposes auth, memory, ingest, tags, chat, i
 - Auth routes include endpoint-specific rate limits and OAuth state validation.
 - Memory routes support list, detail, update, soft delete, semantic search, and graph payload generation for visualization.
 - Ingest routes handle text/URL ingestion and multipart file uploads with type and size checks, and the ingestion pipeline now also creates an `artifacts` record for raw captured content.
+- Ingest routes accept capture origin metadata so Vault and Chat uploads can be distinguished while sharing the same persistence pipeline.
+- Multipart uploads pass file name, MIME type, size, tags, optional metadata, and `createdFrom` into ingestion for searchable artifact/node metadata.
 - Chat route persists user/assistant turns to `conversations` and `messages`, returns `confidence`, `grounding`, and `memoryWriteStatus`, and triggers post-turn normalized memory extraction.
+- Chat retrieval context includes legacy graph node metadata so uploaded documents, images, tweet links, and notes can ground answers by source details.
 - Explicit `store` intent still ingests into the legacy graph node pipeline for backward compatibility, then runs normalized memory processing against the new memory tables.
 - Internal routes under `/internal` expose memory extraction, merge, context, and event-style hooks for future async/event-driven orchestration.
 - Tags route returns user tags for filtering.
