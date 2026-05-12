@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { ArrowUp, Loader2, Paperclip } from "lucide-react";
+import { AssistantMessageBody } from "@/components/ai-elements/assistant-message-body";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai-elements/reasoning";
 
 interface CaptureResult {
@@ -75,6 +76,9 @@ function normalizeMemoriesFromMetadata(msg: PersistedMessage): ChatMessage["memo
 
   return undefined;
 }
+
+/** Single content column: messages + composer share the same width and horizontal bounds */
+const CHAT_THREAD_CLASS = "mx-auto w-full min-w-0 max-w-[720px]";
 
 export function ChatInterface() {
   const router = useRouter();
@@ -287,7 +291,7 @@ export function ChatInterface() {
   return (
     <div className="relative flex h-full flex-col bg-white">
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-6 pt-6 md:pt-8 pb-28 md:pb-32">
-        <div className="mx-auto max-w-[720px] space-y-5">
+        <div className={`${CHAT_THREAD_CLASS} space-y-5`}>
           {messages.length === 0 && (
             <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
               <div className="relative mb-6 inline-flex h-12 w-12 items-center justify-center border border-zinc-200 bg-white">
@@ -326,41 +330,40 @@ export function ChatInterface() {
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex flex-col gap-1.5 ${msg.role === "user" ? "items-end" : "items-start"}`}
+              className={`flex w-full min-w-0 flex-col gap-1.5 ${msg.role === "user" ? "items-end" : "items-stretch"}`}
             >
-              <div
-                className={`relative max-w-[80%] border px-4 py-3 text-[14px] ${msg.role === "user"
-                    ? "border-zinc-900 bg-zinc-900 text-white"
-                    : "border-zinc-200 bg-white text-zinc-800"
-                  }`}
-              >
-                <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
-                <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
-                <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
-                <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
-
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-
-                {msg.memories && msg.memories.length > 0 && (
-                  <div className="mt-4 space-y-2 border-t border-dashed border-zinc-200 pt-3">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-900">
-                      Referenced memories
-                    </p>
-                    {msg.memories.map((m) => (
-                      <Link
-                        key={m.id}
-                        href={`/memories/${m.legacyNodeId ?? m.id}`}
-                        className="block border border-zinc-200 bg-white px-3 py-2 text-[12px] hover:border-zinc-200 hover:bg-white/80 transition-colors"
-                      >
-                        <span className="font-bold text-zinc-800">{m.title || "Untitled"}</span>
-                        {m.summary && (
-                          <span className="ml-1 text-zinc-500">— {m.summary.slice(0, 80)}...</span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {msg.role === "assistant" ? (
+                <div className="w-full min-w-0 py-2 text-zinc-800">
+                  <AssistantMessageBody content={msg.content} />
+                  {msg.memories && msg.memories.length > 0 && (
+                    <div className="mt-5 space-y-2 border-t border-zinc-200/80 pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">
+                        Referenced memories
+                      </p>
+                      {msg.memories.map((m) => (
+                        <Link
+                          key={m.id}
+                          href={`/memories/${m.legacyNodeId ?? m.id}`}
+                          className="block min-h-11 rounded-md border border-zinc-200/90 bg-zinc-50/80 px-3 py-2.5 text-[13px] leading-snug text-zinc-800 transition-colors hover:border-zinc-300 hover:bg-zinc-100/80 focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+                        >
+                          <span className="font-semibold text-zinc-900">{m.title || "Untitled"}</span>
+                          {m.summary && (
+                            <span className="ml-1 text-zinc-500">— {m.summary.slice(0, 80)}...</span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="relative ml-auto w-fit max-w-[min(100%,85%)] min-w-0 wrap-break-word border border-zinc-900 bg-zinc-900 px-4 py-3 text-left text-[14px] text-white sm:max-w-[80%]">
+                  <span className="absolute -left-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -right-[3px] -top-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -left-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <span className="absolute -right-[3px] -bottom-[3px] h-1.5 w-1.5 border border-zinc-200 bg-white" />
+                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                </div>
+              )}
               {msg.createdAt && (
                 <span className="text-[10px] font-medium text-zinc-400 px-1">
                   {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -370,8 +373,8 @@ export function ChatInterface() {
           ))}
 
           {loading && (
-            <div className="flex justify-start mb-4">
-              <div className="relative max-w-[80%] text-[14px] text-zinc-800">
+            <div className="mb-4 flex w-full min-w-0 justify-start">
+              <div className="w-full min-w-0 py-2 text-[15px] text-zinc-800">
                 <Reasoning isStreaming={true} defaultOpen={false}>
                   <ReasoningTrigger />
                   <ReasoningContent>Thinking about your memories...</ReasoningContent>
@@ -395,7 +398,9 @@ export function ChatInterface() {
             if (file) void handleFileUpload(file);
           }}
         />
-        <div className="mx-auto flex w-full max-w-[720px] items-center gap-2 rounded-2xl border border-zinc-200/60 bg-white/70 p-2 shadow-lg shadow-zinc-900/5 backdrop-blur-xl">
+        <div
+          className={`${CHAT_THREAD_CLASS} flex items-center gap-2 rounded-2xl border border-zinc-200/60 bg-white/70 p-2 shadow-lg shadow-zinc-900/5 backdrop-blur-xl`}
+        >
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
