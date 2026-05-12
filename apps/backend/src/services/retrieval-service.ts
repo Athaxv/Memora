@@ -12,6 +12,8 @@ export interface RetrievalResult {
     title: string | null;
     summary: string | null;
     type: string;
+    /** Full node text for RAG chunks (truncated downstream). */
+    content?: string | null;
     metadata?: Record<string, unknown> | null;
     similarity: number;
   }>;
@@ -193,6 +195,7 @@ export async function retrieveMemoryContext(params: {
       title: result.node.title,
       summary: result.node.summary,
       type: result.node.type,
+      content: result.node.content,
       metadata: result.node.metadata,
       similarity: result.similarity,
       importance:
@@ -219,6 +222,7 @@ export async function retrieveMemoryContext(params: {
       title: memory.title ?? null,
       summary: memory.summary,
       type: memory.type,
+      content: memory.content ?? null,
       metadata: memory.metadata,
       similarity: memory.similarity,
     })),

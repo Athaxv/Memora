@@ -1,5 +1,5 @@
 import type { Database } from "@repo/db/client";
-import { getConversationState } from "@repo/memory";
+import { getConversationState, resolveLegacyNodeIdsForMemoryRecords } from "@repo/memory";
 import { detectIntent } from "./intent-service";
 import { retrieveMemoryContext } from "./retrieval-service";
 import { buildChatContext } from "./context-builder";
@@ -69,17 +69,11 @@ export async function runChatOrchestration(params: {
   });
 
   const strongGroundingContext = [
-    "Relevant user memory:",
     context.promptContext,
     "",
-    "Conversation context:",
+    "Follow-up cues from session (already included above; use only if consistent with RAG):",
     `- Active topic: ${context.sessionState?.activeTopics[0] ?? "none"}`,
     `- Recent entities: ${(context.sessionState?.activeTopics ?? []).slice(0, 5).join(", ") || "none"}`,
-    "",
-    "Instructions:",
-    "- Use memory to personalize the response.",
-    "- Do not ignore relevant memory.",
-    "- If memory is weak, say so clearly.",
   ].join("\n");
 
   const reply = await generateGroundedReply({
@@ -90,6 +84,12 @@ export async function runChatOrchestration(params: {
     promptContext: strongGroundingContext,
     history: params.history,
   });
+
+  const normalizedIds = retrieval.memories.map((m) => m.id);
+  const legacyNodeByMemoryId =
+    normalizedIds.length > 0
+      ? await resolveLegacyNodeIdsForMemoryRecords(params.db, params.userId, normalizedIds)
+      : new Map<string, string | null>();
 
   return {
     reply,
@@ -108,14 +108,21 @@ export async function runChatOrchestration(params: {
         : null,
     },
     memories: [
-      ...retrieval.memories.map((memory) => ({
-        id: memory.id,
-        title: memory.summary,
-        summary: memory.canonicalText,
-        type: memory.kind,
-        similarity: memory.score,
+      ...retrieval.memories.map((memory) => {
+        const resolved = legacyNodeByMemoryId.get(memory.id);
+        return {
+          id: memory.id,
+          ...(resolved ? { legacyNodeId: resolved } : {}),
+          title: memory.summary,
+          summary: memory.canonicalText,
+          type: memory.kind,
+          similarity: memory.score,
+        };
+      }),
+      ...retrieval.legacyNodes.map((n) => ({
+        ...n,
+        legacyNodeId: n.id,
       })),
-      ...retrieval.legacyNodes,
     ],
   };
 }

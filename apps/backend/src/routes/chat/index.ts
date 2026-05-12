@@ -239,6 +239,7 @@ export async function chatRoutes(app: FastifyInstance) {
         memoryWriteStatus?: "stored" | "pending" | "skipped";
         memories: Array<{
           id: string;
+          legacyNodeId?: string;
           title: string | null;
           summary: string | null;
           type: string;
@@ -275,6 +276,7 @@ export async function chatRoutes(app: FastifyInstance) {
           memories: [
             {
               id: created.nodeId,
+              legacyNodeId: created.nodeId,
               title: created.title,
               summary: created.summary,
               type: "note",
@@ -314,6 +316,7 @@ export async function chatRoutes(app: FastifyInstance) {
             memoryIds: result.memories.map((memory) => memory.id),
             memoryRefs: result.memories.map((m) => ({
               id: m.id,
+              ...(m.legacyNodeId ? { legacyNodeId: m.legacyNodeId } : {}),
               title: m.title,
               summary: m.summary,
               type: m.type,

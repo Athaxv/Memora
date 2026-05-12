@@ -1,19 +1,13 @@
 import { getConversationState } from "@repo/memory";
 import type { Database } from "@repo/db/client";
 import type { RetrievedMemory } from "@repo/memory";
+import { formatRagContextBlock, fuseRagDocuments, type RagLegacyNode } from "./rag-assembly";
 
 export async function buildChatContext(params: {
   db: Database;
   conversationId: string;
   memories: RetrievedMemory[];
-  legacyNodes: Array<{
-    id: string;
-    title: string | null;
-    summary: string | null;
-    type: string;
-    metadata?: Record<string, unknown> | null;
-    similarity: number;
-  }>;
+  legacyNodes: RagLegacyNode[];
   webResults?: Array<{
     title: string;
     url: string;
@@ -22,32 +16,8 @@ export async function buildChatContext(params: {
 }) {
   const sessionState = await getConversationState(params.db, params.conversationId);
 
-  const normalizedMemoryContext = params.memories
-    .map(
-      (memory) =>
-        `[Memory ${memory.id}] (${memory.tier}/${memory.kind}) ${memory.summary}\n${memory.canonicalText}\nscore=${memory.score.toFixed(2)}`
-    )
-    .join("\n\n");
-
-  const legacyMemoryContext = params.legacyNodes
-    .map((memory) => {
-      const metadata = memory.metadata
-        ? Object.entries(memory.metadata)
-            .filter(([, value]) => value !== undefined && value !== null)
-            .slice(0, 12)
-            .map(([key, value]) =>
-              Array.isArray(value) ? `${key}=${value.join(", ")}` : `${key}=${String(value)}`
-            )
-            .join("; ")
-        : "";
-
-      return `[Legacy ${memory.id}] ${memory.title || "Untitled"}\n${
-        memory.summary || ""
-      }\ntype=${memory.type}\nmetadata=${metadata || "none"}\nsimilarity=${memory.similarity.toFixed(
-        2
-      )}`;
-    })
-    .join("\n\n");
+  const fusedDocs = fuseRagDocuments(params.memories, params.legacyNodes);
+  const ragBlock = formatRagContextBlock(fusedDocs);
 
   const topicHints = params.legacyNodes
     .map((node) =>
@@ -90,14 +60,24 @@ export async function buildChatContext(params: {
     )
     .join("\n");
 
+  const promptContext = `### RAG — Retrieved memory documents (primary source of user-specific facts)
+${ragBlock}
+
+### Supplementary — Web (public / fresh facts; cite URLs when used)
+${webContext || "No web sources."}
+
+### Supplementary — Topic hints from graph metadata
+${topicHints.join(", ") || "none"}
+
+### Supplementary — Asset lines
+${assetContext || "none"}
+
+### Supplementary — Conversation state (session; not a substitute for missing RAG docs)
+${sessionContext}`;
+
   return {
     sessionState,
-    promptContext: `Normalized memory context:\n${
-      normalizedMemoryContext || "No normalized memories."
-    }\n\nLegacy graph context:\n${legacyMemoryContext || "No legacy graph matches."}\n\nWeb context:\n${
-      webContext || "No web sources."
-    }\n\nTopic hints:\n${topicHints.join(", ") || "none"}\n\nAsset context:\n${
-      assetContext || "none"
-    }\n\nConversation state:\n${sessionContext}`,
+    ragDocumentCount: fusedDocs.length,
+    promptContext,
   };
 }
