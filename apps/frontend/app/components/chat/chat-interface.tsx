@@ -2,9 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { ArrowUp } from "lucide-react";
+import { queryKeys } from "@/lib/query-keys";
+import { ArrowUp, Loader2, Paperclip } from "lucide-react";
 import { Reasoning, ReasoningTrigger, ReasoningContent } from "@/components/ai-elements/reasoning";
+
+interface CaptureResult {
+  nodeId: string;
+  artifactId?: string;
+  title: string | null;
+  summary: string;
+  tags: string[];
+  edgeCount: number;
+}
 
 interface ChatMessage {
   id: string;
@@ -13,6 +25,7 @@ interface ChatMessage {
   createdAt?: string;
   memories?: {
     id: string;
+    legacyNodeId?: string;
     title: string | null;
     summary: string | null;
     type: string;
@@ -27,6 +40,7 @@ interface PersistedMessage {
   metadata?: {
     memoryRefs?: Array<{
       id: string;
+      legacyNodeId?: string;
       title?: string | null;
       summary?: string | null;
       type?: string;
@@ -41,6 +55,7 @@ function normalizeMemoriesFromMetadata(msg: PersistedMessage): ChatMessage["memo
       .filter((m) => typeof m?.id === "string" && m.id.length > 0)
       .map((m) => ({
         id: m.id,
+        ...(m.legacyNodeId ? { legacyNodeId: m.legacyNodeId } : {}),
         title: m.title ?? null,
         summary: m.summary ?? null,
         type: m.type ?? "note",
@@ -63,6 +78,7 @@ function normalizeMemoriesFromMetadata(msg: PersistedMessage): ChatMessage["memo
 
 export function ChatInterface() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const activeSessionId = searchParams.get("sessionId");
 
@@ -71,7 +87,9 @@ export function ChatInterface() {
   const [loading, setLoading] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function createMessageId() {
     return crypto.randomUUID();
@@ -151,6 +169,8 @@ export function ChatInterface() {
           }
         }
 
+        void queryClient.invalidateQueries({ queryKey: queryKeys.chat.sessions });
+
         setMessages((prev) => [
           ...prev,
           {
@@ -186,6 +206,81 @@ export function ChatInterface() {
       ]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  function appendUploadedMessage(result: CaptureResult) {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: createMessageId(),
+        role: "user",
+        content: `Uploaded ${result.title || "a document"}.`,
+        createdAt: new Date().toISOString(),
+        memories: [
+          {
+            id: result.nodeId,
+            legacyNodeId: result.nodeId,
+            title: result.title,
+            summary: result.summary,
+            type: "document",
+          },
+        ],
+      },
+    ]);
+  }
+
+  async function handleFileUpload(file: File) {
+    setUploadingFile(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("createdFrom", "chat");
+      formData.append(
+        "metadata",
+        JSON.stringify({
+          originalName: file.name,
+          size: file.size,
+          lastModified: file.lastModified,
+        })
+      );
+
+      const res = await api("/ingest/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        const message =
+          typeof data?.error === "string" ? data.error : `Upload failed (${res.status})`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: createMessageId(),
+            role: "assistant",
+            content: message,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        return;
+      }
+
+      appendUploadedMessage((await res.json()) as CaptureResult);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: createMessageId(),
+          role: "assistant",
+          content: "Upload failed. Please try again.",
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setUploadingFile(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
@@ -252,16 +347,16 @@ export function ChatInterface() {
                       Referenced memories
                     </p>
                     {msg.memories.map((m) => (
-                      <a
+                      <Link
                         key={m.id}
-                        href={`/memories/${m.id}`}
+                        href={`/memories/${m.legacyNodeId ?? m.id}`}
                         className="block border border-zinc-200 bg-white px-3 py-2 text-[12px] hover:border-zinc-200 hover:bg-white/80 transition-colors"
                       >
                         <span className="font-bold text-zinc-800">{m.title || "Untitled"}</span>
                         {m.summary && (
                           <span className="ml-1 text-zinc-500">— {m.summary.slice(0, 80)}...</span>
                         )}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -291,7 +386,29 @@ export function ChatInterface() {
         onSubmit={handleSend}
         className="absolute bottom-4 md:bottom-6 left-0 right-0 px-4 md:px-6"
       >
+        <input
+          ref={fileRef}
+          type="file"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void handleFileUpload(file);
+          }}
+        />
         <div className="mx-auto flex w-full max-w-[720px] items-center gap-2 rounded-2xl border border-zinc-200/60 bg-white/70 p-2 shadow-lg shadow-zinc-900/5 backdrop-blur-xl">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={loading || sessionLoading || uploadingFile}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 disabled:opacity-40"
+            aria-label="Upload memory"
+          >
+            {uploadingFile ? (
+              <Loader2 size={18} strokeWidth={2} className="animate-spin" />
+            ) : (
+              <Paperclip size={18} strokeWidth={2} />
+            )}
+          </button>
           <input
             type="text"
             value={input}

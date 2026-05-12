@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthMe, type AuthMeUser } from "@/lib/queries/auth";
+import { queryKeys } from "@/lib/query-keys";
 import {
   Pencil,
   Check,
@@ -26,22 +29,6 @@ interface SocialLinks {
   linkedin?: string;
   twitter?: string;
   portfolio?: string;
-}
-
-interface ResumeNode {
-  id: string;
-  title: string | null;
-}
-
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string | null;
-  avatarUrl: string | null;
-  onboardingCompleted: boolean;
-  socialLinks: SocialLinks | null;
-  resumeNodeId: string | null;
-  resumeNode: ResumeNode | null;
 }
 
 interface Stats {
@@ -90,9 +77,30 @@ function CornerAccents() {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: user, isPending: userLoading } = useAuthMe();
+  const { data: stats, isPending: statsPending } = useQuery({
+    queryKey: queryKeys.auth.stats,
+    queryFn: async () => {
+      const r = await api("/auth/me/stats");
+      if (!r.ok) throw new Error("Failed to load stats");
+      return (await r.json()) as Stats;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const { data: sessionsPayload, isPending: sessionsPending } = useQuery({
+    queryKey: queryKeys.auth.sessions,
+    queryFn: async () => {
+      const r = await api("/auth/me/sessions");
+      if (!r.ok) return { sessions: [] as SessionInfo[] };
+      return (await r.json()) as { sessions: SessionInfo[] };
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const sessions = sessionsPayload?.sessions ?? [];
+  const loading = userLoading || (!!user && (statsPending || sessionsPending));
 
   // Name editing
   const [editingName, setEditingName] = useState(false);
@@ -108,7 +116,6 @@ export default function ProfilePage() {
   const [editingAvatar, setEditingAvatar] = useState(false);
   const [avatarDraft, setAvatarDraft] = useState("");
   const [resumeDetail, setResumeDetail] = useState<ResumeDetail | null>(null);
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [changingPassword, setChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -129,20 +136,10 @@ export default function ProfilePage() {
   }
 
   useEffect(() => {
-    Promise.all([
-      api("/auth/me").then((r) => r.json()),
-      api("/auth/me/stats").then((r) => r.json()),
-      api("/auth/me/sessions")
-        .then((r) => (r.ok ? r.json() : { sessions: [] }))
-        .catch(() => ({ sessions: [] })),
-    ]).then(([userData, statsData, sessionsData]) => {
-      setUser(userData);
-      setStats(statsData);
-      setSessions(sessionsData.sessions || []);
-      setAvatarDraft(userData.avatarUrl || "");
-      setLoading(false);
-    });
-  }, []);
+    if (user?.avatarUrl !== undefined) {
+      setAvatarDraft(user.avatarUrl || "");
+    }
+  }, [user?.avatarUrl]);
 
   useEffect(() => {
     if (!user?.resumeNode?.id) {
@@ -171,7 +168,9 @@ export default function ProfilePage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setUser((prev) => (prev ? { ...prev, name: updated.name } : prev));
+      queryClient.setQueryData<AuthMeUser>(queryKeys.auth.me, (prev) =>
+        prev ? { ...prev, name: updated.name } : prev
+      );
     }
     setEditingName(false);
   }
@@ -189,7 +188,9 @@ export default function ProfilePage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setUser((prev) => (prev ? { ...prev, socialLinks: updated.socialLinks } : prev));
+      queryClient.setQueryData<AuthMeUser>(queryKeys.auth.me, (prev) =>
+        prev ? { ...prev, socialLinks: updated.socialLinks } : prev
+      );
     }
     setEditingSocial(false);
   }
@@ -202,7 +203,9 @@ export default function ProfilePage() {
     });
     if (res.ok) {
       const updated = await res.json();
-      setUser((prev) => (prev ? { ...prev, avatarUrl: updated.avatarUrl } : prev));
+      queryClient.setQueryData<AuthMeUser>(queryKeys.auth.me, (prev) =>
+        prev ? { ...prev, avatarUrl: updated.avatarUrl } : prev
+      );
       setEditingAvatar(false);
     }
   }
@@ -228,7 +231,7 @@ export default function ProfilePage() {
         alert(message);
       }
 
-      setUser((prev) =>
+      queryClient.setQueryData<AuthMeUser>(queryKeys.auth.me, (prev) =>
         prev
           ? {
               ...prev,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
+import { QueryProvider } from "./providers/query-provider";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -35,7 +36,7 @@ export default function RootLayout({
       <body
         className={`${instrumentSerif.variable} ${inter.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { VaultSearchBar } from "@/app/components/vault/vault-search-bar";
 import { RecentItems } from "@/app/components/vault/recent-items";
 import { EmptyState } from "@/app/components/vault/empty-state";
@@ -18,38 +20,67 @@ interface MemoryNode {
   createdAt: string;
 }
 
+type MemoriesListPage = {
+  nodes: MemoryNode[];
+  nextCursor: string | null;
+};
+
 export default function VaultPage() {
-  const [memories, setMemories] = useState<MemoryNode[]>([]);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
+  const queryClient = useQueryClient();
   const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [savingUrl, setSavingUrl] = useState(false);
   const [captureOpen, setCaptureOpen] = useState(false);
 
-  const fetchMemories = useCallback(async (cursor?: string) => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (cursor) params.set("cursor", cursor);
-    params.set("limit", "20");
-
-    const res = await api(`/memories?${params}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (cursor) {
-        setMemories((prev) => [...prev, ...data.nodes]);
-      } else {
-        setMemories(data.nodes);
+  const listQuery = useInfiniteQuery({
+    queryKey: queryKeys.memories.list,
+    enabled: !searchMode,
+    queryFn: async ({ pageParam }: { pageParam: string | null }) => {
+      const params = new URLSearchParams();
+      if (pageParam) params.set("cursor", pageParam);
+      params.set("limit", "20");
+      const res = await api(`/memories?${params}`);
+      if (!res.ok) {
+        throw new Error("Failed to load memories");
       }
-      setNextCursor(data.nextCursor);
-    }
-    setLoading(false);
-    setInitialLoad(false);
-  }, []);
+      return (await res.json()) as MemoriesListPage;
+    },
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor ?? null,
+  });
 
-  useEffect(() => {
-    fetchMemories();
-  }, [fetchMemories]);
+  const searchResultQuery = useQuery({
+    queryKey: queryKeys.memories.search(searchQuery),
+    enabled: searchMode && searchQuery.length > 0,
+    queryFn: async () => {
+      const res = await api("/memories/search", {
+        method: "POST",
+        body: JSON.stringify({ query: searchQuery }),
+      });
+      if (!res.ok) {
+        throw new Error("Search failed");
+      }
+      const data = await res.json();
+      return data.results.map((r: { node: MemoryNode }) => r.node) as MemoryNode[];
+    },
+  });
+
+  const memories: MemoryNode[] = searchMode
+    ? (searchResultQuery.data ?? [])
+    : (listQuery.data?.pages.flatMap((p) => p.nodes) ?? []);
+
+  const nextCursor =
+    !searchMode && listQuery.hasNextPage
+      ? listQuery.data?.pages[listQuery.data.pages.length - 1]?.nextCursor ?? null
+      : null;
+
+  const loading = searchMode
+    ? searchResultQuery.isFetching
+    : listQuery.isFetching;
+
+  const initialLoad = searchMode
+    ? searchResultQuery.isPending
+    : listQuery.isPending;
 
   async function handleSave(url: string) {
     setSavingUrl(true);
@@ -59,29 +90,17 @@ export default function VaultPage() {
     });
     setSavingUrl(false);
     setSearchMode(false);
-    fetchMemories();
+    await queryClient.invalidateQueries({ queryKey: ["memories"] });
   }
 
   async function handleSearch(query: string) {
-    setLoading(true);
+    setSearchQuery(query);
     setSearchMode(true);
-
-    const res = await api("/memories/search", {
-      method: "POST",
-      body: JSON.stringify({ query }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setMemories(data.results.map((r: { node: MemoryNode }) => r.node));
-      setNextCursor(null);
-    }
-    setLoading(false);
   }
 
   function handleLoadMore() {
-    if (nextCursor && !loading) {
-      fetchMemories(nextCursor);
+    if (nextCursor && !listQuery.isFetching && listQuery.hasNextPage) {
+      void listQuery.fetchNextPage();
     }
   }
 
@@ -109,7 +128,7 @@ export default function VaultPage() {
               onCaptured={() => {
                 setCaptureOpen(false);
                 setSearchMode(false);
-                fetchMemories();
+                void queryClient.invalidateQueries({ queryKey: ["memories"] });
               }}
             />
           </div>
@@ -140,9 +159,10 @@ export default function VaultPage() {
               Search results
             </span>
             <button
+              type="button"
               onClick={() => {
                 setSearchMode(false);
-                fetchMemories();
+                void listQuery.refetch();
               }}
               className="text-[12px] font-bold text-zinc-500 underline underline-offset-4 decoration-zinc-300 hover:decoration-zinc-900 hover:text-zinc-900 transition-colors"
             >

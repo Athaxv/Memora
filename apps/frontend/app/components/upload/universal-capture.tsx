@@ -1,7 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { isUrl } from "@/lib/url-utils";
 import {
   Check,
@@ -45,6 +47,7 @@ export function UniversalCapture({
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<CaptureResult | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
 
   const modes: Array<{ id: CaptureMode; label: string; icon: typeof FileUp }> = [
     { id: "file", label: "File", icon: FileUp },
@@ -134,6 +137,10 @@ export function UniversalCapture({
 
       const result = (await res.json()) as CaptureResult;
       setLastResult(result);
+      if (createdFrom === "vault") {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.memories.list });
+        void queryClient.invalidateQueries({ queryKey: ["memories", "graph"] });
+      }
       onCaptured?.(result);
       resetCapture();
       setLastResult(result);

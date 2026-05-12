@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
   Background,
   Controls,
@@ -18,6 +19,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { api } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 
 type GraphNode = {
   id: string;
@@ -54,6 +56,11 @@ type GraphPayload = {
   nodes: GraphNode[];
   edges: GraphEdge[];
 };
+
+/** Stable fallback so hooks don’t see new object/array references every render when the query is idle. */
+const EMPTY_GRAPH_PAYLOAD: GraphPayload = { nodes: [], edges: [] };
+
+const STABLE_EMPTY_CONNECTED_IDS = new Set<string>();
 
 type MemoryNodeData = {
   summary: string;
@@ -276,48 +283,35 @@ const nodeTypes = {
   asset: AssetNode,
 };
 
+const graphQueryParams = new URLSearchParams({
+  limit: "50",
+  edgeLimitPerNode: "3",
+}).toString();
+
 export default function MemoryGraphPage() {
   const router = useRouter();
-  const [payload, setPayload] = useState<GraphPayload>({ nodes: [], edges: [] });
-  const [loading, setLoading] = useState(true);
-  const [reloading, setReloading] = useState(false);
-  const [error, setError] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [selectedNodeType, setSelectedNodeType] = useState<string>("all");
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [flowNodes, setFlowNodes, onNodesChange] = useNodesState<Node<FlowNodeData>>([]);
   const [flowEdges, setFlowEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  const loadGraph = useCallback(async (showFullscreenLoader = false) => {
-    if (showFullscreenLoader) {
-      setLoading(true);
-    } else {
-      setReloading(true);
-    }
-    setError("");
-
-    try {
-      const params = new URLSearchParams({ limit: "50", edgeLimitPerNode: "3" });
-      const response = await api(`/memories/graph?${params.toString()}`);
+  const { data, isLoading: loading, isFetching, isError, refetch } = useQuery({
+    queryKey: queryKeys.memories.graph(graphQueryParams),
+    queryFn: async () => {
+      const response = await api(`/memories/graph?${graphQueryParams}`);
       if (!response.ok) {
-        setError("Failed to load memory graph.");
-        return;
+        throw new Error("Failed to load memory graph.");
       }
+      return (await response.json()) as GraphPayload;
+    },
+    staleTime: 90_000,
+  });
 
-      const data = (await response.json()) as GraphPayload;
-      setPayload(data);
-    } finally {
-      if (showFullscreenLoader) {
-        setLoading(false);
-      } else {
-        setReloading(false);
-      }
-    }
-  }, []);
+  const payload = data ?? EMPTY_GRAPH_PAYLOAD;
 
-  useEffect(() => {
-    void loadGraph(true);
-  }, [loadGraph]);
+  const reloading = isFetching && !loading;
+  const error = isError ? "Failed to load memory graph." : "";
 
   const rootNode = useMemo(
     () => payload.nodes.find((node) => node.kind === "root") ?? null,
@@ -557,7 +551,7 @@ export default function MemoryGraphPage() {
   const baseEdges = useMemo(() => graphEdges, [graphEdges]);
 
   const connectedNodeIds = useMemo(() => {
-    if (!activeNodeId) return new Set<string>();
+    if (!activeNodeId) return STABLE_EMPTY_CONNECTED_IDS;
 
     const connected = new Set<string>([activeNodeId]);
     for (const edge of baseEdges) {
@@ -639,7 +633,7 @@ export default function MemoryGraphPage() {
           <button
             type="button"
             onClick={() => {
-              void loadGraph(false);
+              void refetch();
             }}
             disabled={reloading}
             aria-label={reloading ? "Reloading graph" : "Reload graph"}
