@@ -35,7 +35,7 @@ export async function classifyIntent(
   const client = getClient(apiKey);
 
   const response = await client.chat.completions.create({
-    model: "llama-3.1-8b-instant",
+    model: "openai/gpt-oss-120b",
     max_tokens: 200,
     messages: [
       {

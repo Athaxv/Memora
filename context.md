@@ -153,7 +153,7 @@ export type Database = ReturnType<typeof createDb>;
 ## 3. `packages/ai` — AI Utilities
 
 **LLM Provider:** Groq (OpenAI-compatible SDK, base URL: `https://api.groq.com/openai/v1`)
-**LLM Model:** `meta-llama/llama-4-scout-17b-16e-instruct`
+**LLM Model:** `openai/gpt-oss-120b`
 **Embedding Provider:** HuggingFace Inference API (optional, requires `HF_API_KEY`)
 **Embedding Model:** `nomic-ai/nomic-embed-text-v1.5` (768 dimensions)
 
@@ -289,7 +289,7 @@ interface IngestResult {
 |-----------|-------|--------|-------|
 | `extractText` | `(content, title?)` | `ExtractedContent` | Passthrough, infers title from first line |
 | `extractUrl` | `(url)` | `ExtractedContent` | Fetches URL, strips HTML (script/style/nav/footer/header), extracts title from `<title>`, `<h1>`, or `og:title`. 10s timeout |
-| `extractFile` | `(buffer, mimeType, fileName, groqApiKey)` | `ExtractedContent` | Routes by MIME: PDF → `pdf-parse`, images → Groq vision (llama-4-scout), text → UTF-8 passthrough |
+| `extractFile` | `(buffer, mimeType, fileName, groqApiKey)` | `ExtractedContent` | Routes by MIME: PDF → `pdf-parse`, images → Groq (`openai/gpt-oss-120b`), text → UTF-8 passthrough |
 
 ### Type Resolution
 | Input type | Node type |
@@ -509,7 +509,7 @@ ORDER BY id DESC, LIMIT limit+1
 | **No ivfflat index** | pgvector cosine index should be created after ~1000+ vectors for performance. Currently using sequential scan. |
 | **No streaming chat** | Chat responses are not streamed (returns full response). SSE/streaming is Phase 2. |
 | **No file upload route validation** | `/api/ingest/upload` exists but `ingestSchema` only validates `text`/`url` types. File uploads need separate validation. |
-| **Image extraction model** | Uses `llama-4-scout` for vision via Groq — verify model supports `image_url` content type on Groq's API. |
+| **Image extraction model** | Uses `openai/gpt-oss-120b` via Groq — verify the model supports `image_url` content type on Groq's API. |
 | **No conversation persistence** | `conversations`/`messages` tables exist but chat API doesn't persist messages yet. |
 | **No rate limiting** | API routes have no rate limiting. |
 | **No RLS** | Row-level security not enabled on Neon — enforced in application code via `userId` filters. |

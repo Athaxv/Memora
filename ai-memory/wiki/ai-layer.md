@@ -4,7 +4,7 @@
 AI utilities now power both the legacy ingestion/chat flow and a normalized memory layer. Groq-hosted LLMs are used for summarization, auto-tagging, intent classification, memory extraction, and reply generation; Hugging Face embeddings support both graph nodes and normalized memory retrieval.
 
 ## Detailed explanation
-- Summarization uses Groq OpenAI-compatible API with a Llama 4 model and short outputs.
+- Summarization uses Groq OpenAI-compatible API with `openai/gpt-oss-120b` and short outputs.
 - Auto-tagging extracts 3-8 tags as structured JSON, validated with Zod.
 - Intent classification maps user messages to store/retrieve/summarize/connect/ask/manage.
 - Embeddings use Hugging Face Router inference (`BAAI/bge-base-en-v1.5`) and are optional; if no HF key is configured, embeddings are skipped to keep ingestion functional.
